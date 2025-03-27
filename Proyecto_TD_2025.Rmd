@@ -1,0 +1,51 @@
+---
+title: "Proyecto Tickets TD"
+author: "José Ignacio Calatayud Cuenca"
+date: "2025-03-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Algoritmo del proyecto. 
+
+```{r}
+
+#Cargamos las librerías
+library(pdftools)
+library(stringr)
+library(dplyr)
+
+```
+
+```{r}
+#Creamos una función para procesar el contenido del PDF y extraiga la información
+procesar_ticket <- function(ficherp) {
+  #Leemos el contenido del PDF
+  texto <- pdf_text(fichero)
+  #Damos al texto un formato adecuado
+  lineas <- strsplit(texto, "\n") [[1]]
+  #Inicializamos las variables para almacenar la información
+  ubicacion <- NA
+  codigo_postal <- NA
+  localidad <- NA
+  telefono_tienda <- NA
+  fecha_hora <- NA
+  op <- NA
+  factura_simplificada <- NA
+  descripcion <- c()
+  precio_unitario <- c()
+  importe <- c()
+  importe_total <- NA
+  iva <- c()
+  base_imponible <- c()
+  cuota <- c()
+  N.C <- NA
+  AID <- NA
+  AUT <- NA
+  ARC <- NA
+  }
+
+```
