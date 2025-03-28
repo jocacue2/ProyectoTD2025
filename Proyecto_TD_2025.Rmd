@@ -21,13 +21,14 @@ library(dplyr)
 ```
 
 ```{r}
-#Creamos una función para procesar el contenido del PDF y extraiga la información
-procesar_ticket <- function(ficherp) {
-  #Leemos el contenido del PDF
+  
+# Creamos una función para procesar el contenido del PDF y extraiga la información
+procesar_ticket <- function(fichero) {
+  # Leemos el contenido del PDF
   texto <- pdf_text(fichero)
-  #Damos al texto un formato adecuado
-  lineas <- strsplit(texto, "\n") [[1]]
-  #Inicializamos las variables para almacenar la información
+  # Damos al texto un formato adecuado
+  lineas <- strsplit(texto, "\n")[[1]]
+  # Inicializamos las variables para almacenar la información.
   ubicacion <- NA
   codigo_postal <- NA
   localidad <- NA
@@ -46,6 +47,27 @@ procesar_ticket <- function(ficherp) {
   AID <- NA
   AUT <- NA
   ARC <- NA
+  # Definimos las variables booleanas.
+  ticket_valido <- F
+  # Definimos el contador que vamos a emplear para ir leyendo el ticket.
+  contador_lineas <- 0
+  
+  for (linea in lineas) {
+    # Para cada iteración del bucle le añadimos uno al contador de líneas.
+    contador_lineas <- contador_lineas + 1
+    
+    # Comprobamos si en la primera línea aparece Mercadona.
+    if (str_detect(linea, "MERCADONA, S.A.")) {
+      ticket_valido <- TRUE
+    }
+    
+    if (ticket_valido) {
+      # En la segunda linea siempre se encontrará la ubicación, la guardamos quitando los espaciados.
+      if (contador_lineas == 2) {
+        ubicacion <- str_trim(linea)
+      }
+    }
   }
+}
 
 ```
