@@ -33,7 +33,8 @@ procesar_ticket <- function(fichero) {
   codigo_postal <- NA
   localidad <- NA
   telefono_tienda <- NA
-  fecha_hora <- NA
+  fecha <- NA
+  hora <- NA
   op <- NA
   factura_simplificada <- NA
   descripcion <- c()
@@ -61,10 +62,32 @@ procesar_ticket <- function(fichero) {
       ticket_valido <- TRUE
     }
     
+    #Nos aseguramos si el ticket es válido para continuar con el progreso.
     if (ticket_valido) {
       # En la segunda linea siempre se encontrará la ubicación, la guardamos quitando los espaciados.
       if (contador_lineas == 2) {
         ubicacion <- str_trim(linea)
+      }
+      
+      # En la tercera línea se halla el código postal y la localidad, las guardamos separando la linea por el espacio.
+      if (contador_lineas == 3) {
+        partes <- strsplit(texto, " ")[[1]]
+        codigo_postal <- partes[1]
+        localidad <- partes[2]
+      }
+      
+      #Extraemos de la cuarta línea el teléfono de la tienda, separando por los dos punto para así quedarnos únicamente con el número.
+      if (contador_lineas == 4) {
+        partes <- strsplit(texto, ":")[[1]]
+        telefono_tienda <- partes[1]
+      }
+      
+      #Extraemos de la quinta línea la fecha, la hora y el número del OP, separando la línea por el espacio.
+      if (contador_lineas == 5) {
+        partes <- strsplit(texto, " ")[[1]]
+        fecha <- partes[1]
+        hora <- partes[2]
+        op <- partes[4]
       }
     }
   }
