@@ -89,6 +89,12 @@ procesar_ticket <- function(fichero) {
         hora <- partes[2]
         op <- partes[4]
       }
+      
+      #Extraemos el número de la factura simplificada de la quinta línea mediante la división de la misma por los dos puntos.
+      if (contador_lineas == 5) {
+        partes <- strsplit(texto, ":")[[1]]
+        factura_simplificada <- partes[2]
+      }
     }
   }
 }
