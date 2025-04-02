@@ -105,7 +105,22 @@ procesar_ticket <- function(fichero) {
         en_productos <- TRUE
       } else if (en_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
         
+        # Hacemos un condicional para extraer los productos normales (ej: "1 GARROFON 1,20").
+        #Si se detecta "^\\d+", que significa que comienza con uno o más dígitos, en nuestro caso es la cantidad. Luego "\\s+", que significa que va seguido de uno o más espacios. Seguido de "\\D+", que significa uno o más caracteres que no son dígitos, que en nuestro caso es la descripción del producto. A continuación otro "\\s+" y por último "\\d+,\\d{2}$", que significa que es uno o más dígitos (precio en euros), seguido de una coma y exactamente 2 dígitos (los céntimos).
+        if (str_detect(linea, "^\\d+\\s+\\D+\\s+\\d+,\\d{2}$")) {
+          
+          # Dividimos la linea en partes después de "\\s+", que significa uno o más espacios y "(?=\\d+,\\d{2}$)", que busca el precio (explicado anteriormente) sin incluirlo en la separación. Utilizamos simplify con un valor TRUE para que así nos devuelva partes como una matriz que es de más fácil acceso. 
+          partes <- str_split(linea, "\\s+(?=\\d+,\\d{2}$)", simplify = TRUE)
+          productos <- rbind(productos, data.frame(
+            Descripcion = partes[1,1],
+            P.Unit = NA,
+            Importe = partes[1,2],
+          ))
+        }
         
+        
+          
+          
         
       } else if (str_detect(linea, "TOTAL \\(€\\)")) {
   en_productos <- FALSE
