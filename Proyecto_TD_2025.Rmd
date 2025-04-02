@@ -48,6 +48,7 @@ procesar_ticket <- function(fichero) {
   AID <- NA
   AUT <- NA
   ARC <- NA
+  productos <- data.frame(Descripcion = character(), P.Unit = character(), Importe = character())
   # Definimos las variables booleanas.
   ticket_valido <- F
   # Definimos el contador que vamos a emplear para ir leyendo el ticket.
@@ -94,6 +95,14 @@ procesar_ticket <- function(fichero) {
       if (contador_lineas == 5) {
         partes <- strsplit(texto, ":")[[1]]
         factura_simplificada <- partes[2]
+      }
+      
+      #Extraemos la información que se encuentra en productos.
+      if (str_detect(linea, "Descripción\\s+P\\. Unit\\s+Importe")) {
+        en_seccion_productos <- TRUE
+      } else if (en_seccion_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
+        
+        
       }
     }
   }
