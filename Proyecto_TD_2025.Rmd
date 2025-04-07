@@ -100,6 +100,8 @@ procesar_ticket <- function(fichero) {
       #Extraemos la información que se encuentra en productos.
       if (str_detect(linea, "Descripción\\s+P\\. Unit\\s+Importe")) {
         en_productos <- TRUE
+        #Empleamos la variable descripcion_temporal para poder procesar aquellos productos que están formado por dos líneas.
+        descripcion_temporal <- ""
       } else if (en_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
         
         # Hacemos un condicional para extraer los productos normales (ej: "1 GARROFON 1,20").
@@ -115,6 +117,23 @@ procesar_ticket <- function(fichero) {
           ))
         }
         
+        #Productos que comienzan con letras (por ejemplo, "CIGALA PEQUEÑA REF") y que NO sean "PESCADO". Se guarda la descripción en descripcion_temporal y se pasa a la siguiente línea.
+        else if (str_detect(linea, "^[A-Za-z]") && toupper(str_trim(linea)) != "PESCADO") {
+    descripcion_temporal <- str_trim(linea)
+    next
+  }
+         #Cuando ya se tiene una descripcion_temporal y la línea contiene datos de peso (ej: "0,222 kg 16,85 €/kg 3,74").
+        else if (nchar(descripcion_temporal) > 0 && str_detect(linea, "kg.*\\d+,\\d{2}$")) {
+    precio_total <- str_extract(linea, "\\d+,\\d{2}$")
+    productos <- rbind(productos, data.frame(
+      Descripcion = descripcion_temporal,
+      P.Unit = str_extract(linea, "\\d+,\\d{2}\\s*€/kg"),
+      Importe = precio_total,
+      Peso = str_extract(linea, "\\d+,\\d+\\s*kg"),
+    ))
+    # Reiniciamos la variable temporal.
+    descripcion_temporal <- ""
+  }
         # Productos que contienen peso (ej: "0,840 kg 1,85 €/kg 1,55").
         else if (str_detect(linea, "kg.*\\d+,\\d{2}$")) {
           precio_total <- str_extract(linea, "\\d+,\\d{2}$")
@@ -122,10 +141,9 @@ procesar_ticket <- function(fichero) {
             Descripcion = lineas[contador_lineas-1] %>% str_trim(),
             P.Unit = str_extract(linea, "\\d+,\\d{2}\\s*€/kg"),
             Importe = precio_total,
-            stringsAsFactors = FALSE
           ))
         }
-          
+    
       } else if (str_detect(linea, "TOTAL \\(€\\)")) {
   en_productos <- FALSE
     }
@@ -145,7 +163,10 @@ procesar_ticket <- function(fichero) {
   print(archivos_pdf)  # Verifica que se detecten los archivos PDF
 
 # Llamamos a la función con estos archivos
-  
+  for (pdf in archivos_pdf) {
+    # Procesar el ticket
+    informacion_ticket <- procesar_ticket(pdf)
+  }
   
 ```
 
