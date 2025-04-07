@@ -168,6 +168,21 @@ procesar_ticket <- function(fichero) {
              iva <- c(iva, partes[1])
              base_imponible <- c(base_imponible, partes[2])
              cuota <- c(cuota, partes[3])
+           }
+            # Extraemos el N.C y AUT.
+            if (grepl("^N\\.C:", linea)) {
+              # Sabemos que la línea tiene la forma: "N.C: 098100761  AUT: 123754".
+              partes <- strsplit(linea, "\\s+")[[1]]
+              N.C <- partes[2]
+              AUT <- partes[4] 
+            }
+            # Extraemos el AID y ARC.
+            if (grepl("^AID:", linea)) { 
+              # Sabemos que la línea tiene la forma: "AID: A0000000041010   ARC: 3030".
+              partes <- strsplit(linea, "\\s+")[[1]]
+              AID <- partes[2]
+              ARC <- partes[4]
+            }
   }
             
   }
