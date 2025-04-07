@@ -111,9 +111,9 @@ procesar_ticket <- function(fichero) {
           # Dividimos la linea en partes después de "\\s+", que significa uno o más espacios y "(?=\\d+,\\d{2}$)", que busca el precio (explicado anteriormente) sin incluirlo en la separación. Utilizamos simplify con un valor TRUE para que así nos devuelva partes como una matriz que es de más fácil acceso. 
           partes <- str_split(linea, "\\s+(?=\\d+,\\d{2}$)", simplify = TRUE)
           productos <- rbind(productos, data.frame(
-            Descripcion = partes[1,1],
-            P.Unit = NA,
-            Importe = partes[1,2],
+            Descripcion <- partes[1,1],
+            P.Unit <- NA,
+            Importe <- partes[1,2],
           ))
         }
         
@@ -161,7 +161,15 @@ procesar_ticket <- function(fichero) {
             # El .* significa cualquier carácter cero o más veces hasta (\\d+,\\d{2}) que indica un número con formato dígitos, una coma y dos decimales finalizando con el $ para asegurarse que es el final de la cadena. Y el \\1 nos asegura que la función extraerá el primer grupo capturado.
             importe_total <- sub(".* (\\d+,\\d{2})$", "\\1", linea)
           }
-          
+          # Extraemos los datos del IVA, la base imponible y la cuota, detectando una línea que comienza con un porcentaje, por ejemplo: "0% 21,06 0,00".
+           if (grepl("^\\d+%", linea)) {
+             partes <- strsplit(linea, "\\s+")[[1]]
+             # Combinamos los vectores, asignándoles las partes correspondientes.
+             iva <- c(iva, partes[1])
+             base_imponible <- c(base_imponible, partes[2])
+             cuota <- c(cuota, partes[3])
+  }
+            
   }
   }
 
