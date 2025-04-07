@@ -41,14 +41,11 @@ procesar_ticket <- function(fichero) {
   precio_unitario <- c()
   importe <- c()
   importe_total <- NA
-  iva <- c()
-  base_imponible <- c()
-  cuota <- c()
   N.C <- NA
   AID <- NA
   AUT <- NA
   ARC <- NA
-  productos <- data.frame(Descripcion = character(), P.Unit = character(), Importe = character())
+  productos <- data.frame(Descripcion = character(), P.Unit = character(), Importe = character(), Peso = character())
   # Definimos las variables booleanas.
   ticket_valido <- F
   en_productos <- F
@@ -118,14 +115,37 @@ procesar_ticket <- function(fichero) {
           ))
         }
         
-        
+        # Productos que contienen peso (ej: "0,840 kg 1,85 €/kg 1,55").
+        else if (str_detect(linea, "kg.*\\d+,\\d{2}$")) {
+          precio_total <- str_extract(linea, "\\d+,\\d{2}$")
+          productos <- rbind(productos, data.frame(
+            Descripcion = lineas[contador_lineas-1] %>% str_trim(),
+            P.Unit = str_extract(linea, "\\d+,\\d{2}\\s*€/kg"),
+            Importe = precio_total,
+            stringsAsFactors = FALSE
+          ))
+        }
           
-          
-        
       } else if (str_detect(linea, "TOTAL \\(€\\)")) {
   en_productos <- FALSE
     }
   }
+  }
+
 }
 
 ```
+
+
+```{r}
+
+# Obtenemos la lista de archivos PDF en el directorio data.
+  archivos_pdf <- list.files("./data", pattern = "\\.pdf$", full.names = TRUE)
+  print("Archivos PDF detectados:")
+  print(archivos_pdf)  # Verifica que se detecten los archivos PDF
+
+# Llamamos a la función con estos archivos
+  
+  
+```
+
