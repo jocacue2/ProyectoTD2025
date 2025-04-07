@@ -144,9 +144,24 @@ procesar_ticket <- function(fichero) {
           ))
         }
     
+        # Cuando lleguemos a la parte del TOTAL, finalizará el proceso de extracción de elementos de la descripción asignándole el valor FALSE a la variable en_productos.
       } else if (str_detect(linea, "TOTAL \\(€\\)")) {
   en_productos <- FALSE
-    }
+  en_total <- TRUE
+      }
+        # Procesamos la información que se encuentra tras el total, pasando la descripción.
+        if (en_productos != TRUE & en_total == TRUE){
+         # Continuamos recorriendo las líneas restantes
+          for (i in (contador_lineas + 1):length(lineas)) {
+  linea <- str_trim(lineas[i]) 
+          }
+          # Extraemos el precio total de la línea.
+          if (grepl("^TOTAL \\(€\\)", linea)) {
+            # Extrae el importe total usando la función sub para extraer los valores numéricos en este caso el precio del final de la línea.
+            # El .* significa cualquier carácter cero o más veces hasta (\\d+,\\d{2}) que indica un número con formato dígitos, una coma y dos decimales finalizando con el $ para asegurarse que es el final de la cadena. Y el \\1 nos asegura que la función extraerá el primer grupo capturado.
+            importe_total <- sub(".* (\\d+,\\d{2})$", "\\1", linea)
+          }
+          
   }
   }
 
@@ -157,8 +172,14 @@ procesar_ticket <- function(fichero) {
 
 ```{r}
 
-# Obtenemos la lista de archivos PDF en el directorio data.
-  archivos_pdf <- list.files("./data", pattern = "\\.pdf$", full.names = TRUE)
+# Obtenemos la lista de archivos PDF en el directorio datay nos aseguramos que también detecte los archivos ".PDF" mediante "ignore.case = TRUE".
+  archivos_pdf <- list.files("./data", pattern = "\\.pdf$", full.names = TRUE, ignore.case = TRUE)
+
+# Verificamos que se encuentren archivos pdf.
+if (length(archivos_pdf) == 0) {
+  stop("No se encontraron archivos PDF en el directorio ./data")
+}
+
   print("Archivos PDF detectados:")
   print(archivos_pdf)  # Verifica que se detecten los archivos PDF
 
