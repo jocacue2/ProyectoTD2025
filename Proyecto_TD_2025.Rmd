@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Algoritmo del proyecto. 
 
+
 ```{r}
 
 #Cargamos las librerías
@@ -19,6 +20,7 @@ library(stringr)
 library(dplyr)
 
 ```
+
 
 ```{r}
   
@@ -37,7 +39,6 @@ procesar_ticket <- function(fichero) {
   hora <- NA
   op <- NA
   factura_simplificada <- NA
-  descripcion <- c()
   precio_unitario <- c()
   importe <- c()
   importe_total <- NA
@@ -184,10 +185,8 @@ procesar_ticket <- function(fichero) {
               ARC <- partes[4]
             }
   }
-            
   }
   }
-
 }
 
 ```
@@ -202,9 +201,6 @@ procesar_ticket <- function(fichero) {
 if (length(archivos_pdf) == 0) {
   stop("No se encontraron archivos PDF en el directorio ./data")
 }
-
-  print("Archivos PDF detectados:")
-  print(archivos_pdf)  # Verifica que se detecten los archivos PDF
 
 # Llamamos a la función con estos archivos
   for (pdf in archivos_pdf) {
