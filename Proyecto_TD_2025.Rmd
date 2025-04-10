@@ -113,9 +113,9 @@ procesar_ticket <- function(fichero) {
           # Dividimos la linea en partes después de "\\s+", que significa uno o más espacios y "(?=\\d+,\\d{2}$)", que busca el precio (explicado anteriormente) sin incluirlo en la separación. Utilizamos simplify con un valor TRUE para que así nos devuelva partes como una matriz que es de más fácil acceso. 
           partes <- str_split(linea, "\\s+(?=\\d+,\\d{2}$)", simplify = TRUE)
           productos <- rbind(productos, data.frame(
-            Descripcion <- partes[1,1],
-            P.Unit <- NA,
-            Importe <- partes[1,2],
+            Descripcion = partes[1,1],
+            P.Unit = NA,
+            Importe = partes[1,2],
             Peso = NA,
             factura_simplificada = factura_simplificada))
         }
@@ -207,7 +207,7 @@ procesar_ticket <- function(fichero) {
     precio_unitario = I(list(precio_unitario)),
     importe = I(list(importe)),
     importe_total = importe_total,
-    NC = NC,
+    N.C = N.C,
     AID = AID,
     AUT = AUT,
     ARC = ARC)
@@ -221,19 +221,29 @@ procesar_ticket <- function(fichero) {
 
 ```{r}
 
+lista_resultados = list()
+
 # Obtenemos la lista de archivos PDF en el directorio data y nos aseguramos que también detecte los archivos ".PDF" mediante "ignore.case = TRUE".
-  archivos_pdf <- list.files("./data", pattern = "\\.pdf$", full.names = TRUE, ignore.case = TRUE)
+archivos_pdf <- list.files("./data", pattern = "\\.pdf$", full.names = TRUE, ignore.case = TRUE)
 
 # Verificamos que se encuentren archivos pdf.
 if (length(archivos_pdf) == 0) {
   stop("No se encontraron archivos PDF en el directorio ./data")
 }
 
-# Llamamos a la función con estos archivos
-  for (pdf in archivos_pdf) {
-    # Procesar el ticket
-    informacion_ticket <- procesar_ticket(pdf)
-  }
+# Llamamos a la función con estos archivos.
+for (pdf in archivos_pdf) {
+  # Procesar el ticket
+  lista_resultados[[length(lista_resultados) + 1]] <- procesar_ticket(pdf)}
   
+# Unimos todos los data frames de ticket en uno solo (unión por filas).
+tickets_global <- do.call(rbind, lapply(lista_resultados, function(x) x$ticket))
+
+# Unimos todos los data frames de productos en uno solo.
+productos_global <- do.call(rbind, lapply(lista_resultados, function(x) x$productos))
+
+View(tickets_global)
+View(productos_global)
+
 ```
 
