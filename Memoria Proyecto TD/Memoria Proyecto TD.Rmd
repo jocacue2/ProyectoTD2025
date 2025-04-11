@@ -138,7 +138,15 @@ output:
 ---
 
 # Introducción.
+Este proyecto tiene como objetivo desarrollar un algoritmo en el lenguaje de programación R capaz de realizar un análisis exhaustivo de tickets de compra en formato PDF, específicamente de los obtenidos en establecimientos como Mercadona. A través de este proceso, se busca extraer la información relevante de cada ticket y convertirla en un formato estructurado, como lo es el data frame, que facilita su análisis y manipulación.
 
+La importancia de este proyecto radica en la posibilidad de automatizar el proceso de recopilación de datos de tickets en formato PDF, que a menudo son difíciles de manejar debido a su estructura no estandarizada. El uso de R para esta tarea ofrece una gran flexibilidad y potencia a la hora de trabajar con datos y aplicar técnicas de análisis estadístico y visualización.
+
+El enfoque del proyecto se basa en la creación de un algoritmo eficiente que sea capaz de leer, interpretar y extraer información clave de los tickets, tales como: fecha de la compra, productos adquiridos, cantidades, precios y, especialmente, el impacto de factores como el IVA en el precio final de los productos. Este análisis podría proporcionar valiosas perspectivas sobre cómo ha afectado la evolución del IVA a los precios de productos específicos, lo que permitiría realizar comparativas a lo largo del tiempo.
+
+Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
+
+En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
 
 
 
