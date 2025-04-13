@@ -9,8 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Algoritmo del proyecto. 
-
+# Algoritmo del proyecto.
 
 ```{r}
 
@@ -21,234 +20,212 @@ library(dplyr)
 
 ```
 
-
 ```{r}
 # Creamos una función para procesar el contenido del PDF y extraiga la información
 procesar_ticket <- function(fichero) {
   # Leemos el contenido del PDF
-texto <- pdf_text(fichero_pdf)
-# Separamos por salto de línea; si el PDF tiene varias páginas, unificamos todas las líneas
-lineas <- unlist(strsplit(texto, "\n"))
-
-# Inicialización de variables
-ubicacion <- NA
-codigo_postal <- NA
-localidad <- NA
-telefono_tienda <- NA
-fecha <- NA
-hora <- NA
-op <- NA
-factura_simplificada <- NA
-
-# Data frame para almacenar los productos extraídos
-productos <- data.frame(
-  Descripcion = character(), 
-  P.Unit = character(), 
-  Importe = character(), 
-  Peso = character(), 
-  factura_simplificada = character(),
-  Cantidad = numeric(),
-  stringsAsFactors = FALSE
-)
-
-ticket_valido <- FALSE
-en_productos <- FALSE
-en_total <- FALSE  # Indicador para procesar datos posteriores al TOTAL
-contador_lineas <- 0
-descripcion_temporal <- ""  # Variable temporal para guardar la descripción cuando ésta se encuentra en una línea separada
-
-# Recorrido de las líneas extraídas
-for (linea in lineas) {
-  contador_lineas <- contador_lineas + 1
-  linea <- str_trim(linea)
+  texto <- pdf_text(fichero)
   
-  # Identificamos el ticket a partir de una cadena característica
-  if (str_detect(linea, "MERCADONA, S.A.")) {
-    ticket_valido <- TRUE
-  }
+  # Separamos por salto de línea
+  lineas <- unlist(strsplit(texto, "\n"))
   
-  if (ticket_valido) {
-    # Extracción de la información de cabecera en función del número de línea
-    if (contador_lineas == 2) {
-      ubicacion <- linea
+  # Inicialización de variables
+  ubicacion <- NA
+  codigo_postal <- NA
+  localidad <- NA
+  telefono_tienda <- NA
+  fecha <- NA
+  hora <- NA
+  op <- NA
+  factura_simplificada <- NA
+  importe_total <- NA
+  N.C <- NA
+  AID <- NA
+  AUT <- NA
+  ARC <- NA
+
+  # Data frame para productos
+  productos <- data.frame(
+    Descripcion = character(), 
+    P.Unit = character(), 
+    Importe = character(), 
+    Peso = character(), 
+    factura_simplificada = character(),
+    Cantidad = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  ticket_valido <- FALSE
+  en_productos <- FALSE
+  en_total <- FALSE
+  contador_lineas <- 0
+  descripcion_temporal <- ""
+
+  # Procesamos cada línea
+  for (linea in lineas) {
+    contador_lineas <- contador_lineas + 1
+    linea <- str_trim(linea)
+    
+    # Identificamos ticket válido
+    if (str_detect(linea, "MERCADONA, S.A.")) {
+      ticket_valido <- TRUE
     }
     
-    if (contador_lineas == 3) {
-      partes <- strsplit(linea, " ")[[1]]
-      codigo_postal <- partes[1]
-      localidad <- ifelse(length(partes) >= 2, partes[2], NA)
-    }
-    
-    if (contador_lineas == 4) {
-      partes <- strsplit(linea, ":")[[1]]
-      telefono_tienda <- ifelse(length(partes) >= 2, str_trim(partes[2]), NA)
-    }
-    
-    if (contador_lineas == 5) {
-      partes <- strsplit(linea, " ")[[1]]
-      fecha <- ifelse(length(partes) >= 1, partes[1], NA)
-      hora <- ifelse(length(partes) >= 2, partes[2], NA)
-      op <- ifelse(length(partes) >= 4, partes[5], NA)
-    }
-    
-    if (contador_lineas == 6) {
-      partes <- strsplit(linea, ":")[[1]]
-      factura_simplificada <- ifelse(length(partes) >= 2, str_trim(partes[2]), NA)
-    }
-    
-    # Identificamos el inicio de la sección de productos
-    if (str_detect(linea, "Descripción\\s+P\\. Unit\\s+Importe")) {
-      en_productos <- TRUE
+    if (ticket_valido) {
+      # Extracción de cabecera
+      if (contador_lineas == 2) {
+        ubicacion <- linea
+      }
       
-    } else if (en_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
+      if (contador_lineas == 3) {
+        partes <- strsplit(linea, " ")[[1]]
+        codigo_postal <- partes[1]
+        localidad <- ifelse(length(partes) >= 2, paste(partes[-1], collapse = " "), NA)
+      }
       
-      # Caso 1: Línea con cantidad, descripción, precio unitario e importe
-      if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
-        matches <- str_match(linea, "^(\\d+)\\s+(.+)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
-        cantidad <- as.numeric(matches[2])
-        descripcion <- matches[3]
-        precio_unitario <- matches[4]
-        importe <- matches[5]
+      if (contador_lineas == 4) {
+        telefono_tienda <- str_trim(sub("TELÉFONO:", "", linea))
+      }
       
-      # Caso 2: Línea con cantidad, descripción e importe (sin precio unitario)
-      } else if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}$")) {
-        matches <- str_match(linea, "^(\\d+)\\s+(.+)\\s+(\\d+,\\d{2})$")
-        cantidad <- as.numeric(matches[2])
-        descripcion <- matches[3]
-        precio_unitario <- NA
-        importe <- matches[4]
+      if (contador_lineas == 5) {
+        partes <- strsplit(linea, " ")[[1]]
+        fecha <- partes[1]
+        hora <- partes[2]
+        op <- ifelse(length(partes) >= 5, partes[5], NA)
+      }
       
-      # Si la línea contiene solo la descripción (sin datos numéricos), se almacena temporalmente
-      } else if (str_detect(linea, "^[A-Za-z]") && toupper(str_trim(linea)) != "PESCADO") {
-        descripcion_temporal <- str_trim(linea)
+      if (contador_lineas == 6) {
+        factura_simplificada <- str_trim(sub("FACTURA SIMPLIFICADA:", "", linea))
+      }
+      
+      # Sección de productos
+      if (str_detect(linea, "Descripción|Description") & str_detect(linea, "P\\. Unit|Importe")) {
+        en_productos <- TRUE
         next
       }
       
-      # Caso 3: Producto con datos de peso, donde la descripción se ha extraído previamente.
-      else if (nchar(descripcion_temporal) > 0 && str_detect(linea, "kg.*\\d+,\\d{2}$")) {
-        precio_total <- str_extract(linea, "\\d+,\\d{2}$")
-        productos <- rbind(productos, data.frame(
-          Descripcion = descripcion_temporal,
-          P.Unit = str_extract(linea, "\\d+,\\d{2}\\s*€/kg"),
-          Importe = precio_total,
-          Peso = str_extract(linea, "\\d+,\\d+\\s*kg"),
-          factura_simplificada = factura_simplificada,
-          Cantidad = 1,
-          stringsAsFactors = FALSE
-        ))
-        # Reiniciamos la variable temporal.
-        descripcion_temporal <- ""
-        next
-      }
-      
-      # En casos en los que se hayan extraído cantidad, descripción, precio unitario e importe
-      temp_row <- data.frame(Descripcion = descripcion,
-                             P.Unit = precio_unitario,
-                             Importe = importe,
-                             Peso = NA,
-                             factura_simplificada = factura_simplificada,
-                             stringsAsFactors = FALSE
-      )
-      # Se agrega la fila repetida según la cantidad
-      productos <- rbind(productos, temp_row[rep(1, cantidad), ])
-      
-    } else if (str_detect(linea, "TOTAL \\(€\\)")) {
-      # Al llegar a la línea de TOTAL se termina la extracción de productos
-      en_productos <- FALSE
-      en_total <- TRUE
-    }
-    
-    # Procesamos la información que se encuentra después de TOTAL
-    if (!en_productos & en_total) {
-      # Recorremos las líneas restantes para extraer importe total y otros datos
-      for (i in (contador_lineas + 1):length(lineas)) {
-        linea <- str_trim(lineas[i])
-        # Extrae importe total de la línea que comienza por "TOTAL (€)"
-         if (grepl("^TOTAL \\(€\\)", linea)) {
-  # Imprime la línea para comprobar el formato (útil para debug)
-  # print(linea)
-  
-  # Captura el número que sigue a TOTAL (€) sin importar lo que haya a continuación
-  importe_total <- sub(".*TOTAL \\(€\\)\\s*(\\d+,\\d{2}).*", "\\1", linea)
-}
-
-        # Extrae datos del IVA, la base imponible y la cuota (por ejemplo: "0% 21,06 0,00")
-        if (grepl("^\\d+%", linea)) {
-          partes <- strsplit(linea, "\\s+")[[1]]
-          iva <- partes[1]
-          base_imponible <- partes[2]
-          cuota <- partes[3]
-        }
-        # Extrae N.C y AUT (ejemplo: "N.C: 098100761  AUT: 123754")
-        if (grepl("^N\\.C:", linea)) {
-          partes <- strsplit(linea, "\\s+")[[1]]
-          N.C <- partes[2]
-          AUT <- partes[4] 
-        }
-        # Extrae AID y ARC (ejemplo: "AID: A0000000041010   ARC: 3030")
-        if (grepl("^AID:", linea)) {
-          partes <- strsplit(linea, "\\s+")[[1]]
-          AID <- partes[2]
-          ARC <- partes[4]
+      if (en_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
+        # Caso 1: Línea con cantidad, descripción, precio e importe
+        if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
+          matches <- str_match(linea, "^(\\d+)\\s+(.+)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
+          cantidad <- as.numeric(matches[2])
+          descripcion <- matches[3]
+          precio_unitario <- matches[4]
+          importe <- matches[5]
+          
+          temp_row <- data.frame(
+            Descripcion = descripcion,
+            P.Unit = precio_unitario,
+            Importe = importe,
+            Peso = NA,
+            factura_simplificada = factura_simplificada,
+            Cantidad = cantidad,
+            stringsAsFactors = FALSE
+          )
+          productos <- rbind(productos, temp_row)
+          
+        # Caso 2: Línea con descripción e importe (sin cantidad)
+        } else if (str_detect(linea, "^[A-Za-z].*\\d+,\\d{2}$")) {
+          matches <- str_match(linea, "^(.*?)\\s+(\\d+,\\d{2})$")
+          descripcion <- matches[2]
+          importe <- matches[3]
+          
+          temp_row <- data.frame(
+            Descripcion = descripcion,
+            P.Unit = NA,
+            Importe = importe,
+            Peso = NA,
+            factura_simplificada = factura_simplificada,
+            Cantidad = 1,
+            stringsAsFactors = FALSE
+          )
+          productos <- rbind(productos, temp_row)
         }
       }
-      # Se finaliza el bucle principal una vez procesada la información posterior al TOTAL
-      break
+      
+      # Sección TOTAL
+      if (str_detect(linea, "TOTAL \\(€\\)")) {
+        en_productos <- FALSE
+        en_total <- TRUE
+        importe_total <- str_extract(linea, "\\d+,\\d{2}")
+      }
+      
+      # Información después del TOTAL
+      if (en_total) {
+        if (str_detect(linea, "N\\.C:")) {
+          N.C <- str_extract(linea, "N\\.C:\\s*(\\d+)") %>% str_remove("N\\.C:\\s*")
+        }
+        if (str_detect(linea, "AID:")) {
+          AID <- str_extract(linea, "AID:\\s*(\\S+)") %>% str_remove("AID:\\s*")
+        }
+        if (str_detect(linea, "AUT:")) {
+          AUT <- str_extract(linea, "AUT:\\s*(\\d+)") %>% str_remove("AUT:\\s*")
+        }
+        if (str_detect(linea, "ARC:")) {
+          ARC <- str_extract(linea, "ARC:\\s*(\\d+)") %>% str_remove("ARC:\\s*")
+        }
+      }
     }
-    
   }
+  
+  # Creamos el data frame del ticket
+  ticket_df <- data.frame(
+    ubicacion = ubicacion,
+    codigo_postal = codigo_postal,
+    localidad = localidad,
+    telefono_tienda = telefono_tienda,
+    fecha = fecha,
+    hora = hora,
+    op = op,
+    factura_simplificada = factura_simplificada,
+    importe_total = importe_total,
+    N.C = N.C,
+    AID = AID,
+    AUT = AUT,
+    ARC = ARC,
+    stringsAsFactors = FALSE
+  )
+  
+  # Devolvemos ambos data frames en una lista
+  return(list(ticket = ticket_df, productos = productos))
 }
-
-# Construcción del data frame global del ticket con la información extraída.
-ticket_df <- data.frame(
-  ubicacion = ubicacion,
-  codigo_postal = codigo_postal,
-  localidad = localidad,
-  telefono_tienda = telefono_tienda,
-  fecha = fecha,
-  hora = hora,
-  op = op,
-  factura_simplificada = factura_simplificada,
-  precio_unitario = I(list(productos$P.Unit)),  # Agrupamos los datos de precio unitario del producto
-  importe = I(list(productos$Importe)),           # Agrupamos los importes
-  importe_total = importe_total,
-  N.C = if(exists("N.C")) N.C else NA,
-  AID = if(exists("AID")) AID else NA,
-  AUT = if(exists("AUT")) AUT else NA,
-  ARC = if(exists("ARC")) ARC else NA,
-  stringsAsFactors = FALSE
-)}
 
 View(tickets_global) 
 View(productos_global)
 ```
 
-
 ```{r}
 
-lista_resultados = list()
+# Procesamiento de múltiples archivos
+lista_resultados <- list()
 
-# Obtenemos la lista de archivos PDF en el directorio data y nos aseguramos que también detecte los archivos ".PDF" mediante "ignore.case = TRUE".
+# Obtenemos lista de archivos PDF
 archivos_pdf <- list.files("./data", pattern = "\\.pdf$", full.names = TRUE, ignore.case = TRUE)
 
-# Verificamos que se encuentren archivos pdf.
+# Verificamos que hay archivos
 if (length(archivos_pdf) == 0) {
   stop("No se encontraron archivos PDF en el directorio ./data")
 }
 
-# Llamamos a la función con estos archivos.
+# Procesamos cada archivo
 for (pdf in archivos_pdf) {
-  # Procesar el ticket
-  lista_resultados[[length(lista_resultados) + 1]] <- procesar_ticket(pdf)}
-  
-# Unimos todos los data frames de ticket en uno solo (unión por filas).
-tickets_global <- do.call(rbind, lapply(lista_resultados, function(x) x$ticket))
+  tryCatch({
+    resultado <- procesar_ticket(pdf)
+    lista_resultados[[length(lista_resultados) + 1]] <- resultado
+  }, error = function(e) {
+    message("Error procesando ", pdf, ": ", e$message)
+  })
+}
 
-# Unimos todos los data frames de productos en uno solo.
-productos_global <- do.call(rbind, lapply(lista_resultados, function(x) x$productos))
+# Combinamos todos los resultados
+tickets_global <- bind_rows(lapply(lista_resultados, function(x) x$ticket))
+productos_global <- bind_rows(lapply(lista_resultados, function(x) x$productos))
 
+# Visualizamos los resultados
 View(tickets_global)
 View(productos_global)
 
+# Guardamos los resultados en CSV
+write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
+write.csv(productos_global, "productos_global.csv", row.names = FALSE)
 ```
-
