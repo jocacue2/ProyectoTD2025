@@ -220,7 +220,7 @@ ticket_df <- data.frame(
   stringsAsFactors = FALSE
 )}
 
-View(tickets_global)
+View(tickets_global) 
 View(productos_global)
 
 ```
