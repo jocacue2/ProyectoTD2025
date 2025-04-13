@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 
-#Cargamos las librerías
+# Cargamos las librerías necesarias.
 library(pdftools)
 library(stringr)
 library(dplyr)
@@ -21,6 +21,7 @@ library(dplyr)
 ```
 
 ```{r}
+
 # Creamos una función para procesar el contenido del PDF y extraer la información
 procesar_ticket <- function(fichero) {
   texto <- pdf_text(fichero)
@@ -206,10 +207,10 @@ procesar_ticket <- function(fichero) {
 
 ```{r}
 
-# Procesamiento de múltiples archivos
+# Creamos una lista para el procesamiento de todos los tickets.
 lista_resultados <- list()
 
-# Obtenemos lista de archivos PDF
+# Obtenemos lista de archivos PDF.
 archivos_pdf <- list.files(
   "./data", 
   pattern = "^[0-9]{8}\\s+Mercadona.*\\.pdf$", 
@@ -217,12 +218,12 @@ archivos_pdf <- list.files(
   ignore.case = TRUE
 )
 
-# Verificamos que hay archivos
+# Verificamos que hay archivos.
 if (length(archivos_pdf) == 0) {
   stop("No se encontraron archivos PDF en el directorio ./data")
 }
 
-# Procesamos cada archivo
+# Procesamos cada archivo.
 for (pdf in archivos_pdf) {
   tryCatch({
     resultado <- procesar_ticket(pdf)
@@ -232,15 +233,15 @@ for (pdf in archivos_pdf) {
   })
 }
 
-# Combinamos todos los resultados
+# Combinamos todos los resultados.
 tickets_global <- bind_rows(lapply(lista_resultados, function(x) x$ticket))
 productos_global <- bind_rows(lapply(lista_resultados, function(x) x$productos))
 
-# Visualizamos los resultados
+# Visualizamos los resultados.
 View(tickets_global)
 View(productos_global)
 
-# Guardamos los resultados en CSV
+# Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
 write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
 write.csv(productos_global, "productos_global.csv", row.names = FALSE)
 ```

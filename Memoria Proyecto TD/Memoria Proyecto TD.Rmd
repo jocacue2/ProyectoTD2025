@@ -137,6 +137,13 @@ output:
     extra_dependencies: longtable
 ---
 
+```{r}
+
+library(tinytex)
+
+```
+
+
 # Introducción.
 
 Este proyecto tiene como objetivo desarrollar un algoritmo en el lenguaje de programación R capaz de realizar un análisis exhaustivo de tickets de compra en formato PDF, específicamente de los obtenidos en establecimientos de Mercadona. A través de este proceso, se busca extraer la información relevante de cada ticket y convertirla en un formato estructurado, como lo es el data frame, que facilita su análisis y manipulación.
@@ -216,3 +223,21 @@ Aquellas planteadas por nuestro grupo.
 Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
 
 En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
+
+Los datos generales referentes al ticket almacenados en el data frame tendrán la misma forma como se muestran en la Figura \@ref(fig-tablas).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Tablaticket.jpg}
+  \caption{Ejemplo del data frame con la iformación general referente al ticket extraído del ticket de compra.}
+  \label{fig-tablas}
+\end{figure}
+
+Los datos específicos referentes a los productos del ticket se muestran en la Figura \@ref(fig-ticket).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Tablaproductos.jpg}
+  \caption{Ejemplo del data frame con la información específica referente al ticket extraído del ticket de compra.}
+  \label{fig-ticket}
+\end{figure}
