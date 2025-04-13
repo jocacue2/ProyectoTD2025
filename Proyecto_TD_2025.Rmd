@@ -42,7 +42,7 @@ procesar_ticket <- function(fichero) {
   ARC <- NA
   tipos_iva <- character()
   
-  # Data frame para productos (sin archivo ahora)
+  # Data frame para productos
   productos <- data.frame(
     Descripcion = character(), 
     P.Unit = character(), 
@@ -80,7 +80,8 @@ procesar_ticket <- function(fichero) {
         partes <- strsplit(linea, " ")[[1]]
         fecha <- partes[1]
         hora <- partes[2]
-        op <- ifelse(length(partes) >= 5, partes[5], NA)
+        op_encontrado <- str_extract(linea, "OP:\\s*\\d+")
+        op <- ifelse(!is.na(op_encontrado), str_extract(op_encontrado, "\\d+"), NA)
       }
       if (contador_lineas == 6) {
         factura_simplificada <- str_trim(sub("FACTURA SIMPLIFICADA:", "", linea))
@@ -121,7 +122,6 @@ procesar_ticket <- function(fichero) {
               matches <- str_match(siguiente_linea, "^(\\d+[.,]\\d+)\\s*(kg|g|lb|oz)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
               peso <- paste(matches[2], matches[3])
               precio_unitario <- matches[4]
-              # El importe total está en matches[5], pero no se guarda actualmente
               temp_row <- data.frame(
                 Descripcion = descripcion_temp,
                 P.Unit = precio_unitario,
@@ -181,7 +181,7 @@ procesar_ticket <- function(fichero) {
 
   # Ticket con archivo
   ticket_df <- data.frame(
-    archivo = basename(fichero),  # <- ahora solo está aquí
+    archivo = basename(fichero),
     ubicacion = ubicacion,
     codigo_postal = codigo_postal,
     localidad = localidad,
