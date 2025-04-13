@@ -21,7 +21,7 @@ library(dplyr)
 ```
 
 ```{r}
-# Creamos una función para procesar el contenido del PDF y extraiga la información
+# Creamos una función para procesar el contenido del PDF y extraer la información
 procesar_ticket <- function(fichero) {
   # Leemos el contenido del PDF
   texto <- pdf_text(fichero)
@@ -43,15 +43,15 @@ procesar_ticket <- function(fichero) {
   AID <- NA
   AUT <- NA
   ARC <- NA
+  tipos_iva <- character()  # Inicializamos como un vector vacío para almacenar todos los tipos de IVA
 
   # Data frame para productos
   productos <- data.frame(
     Descripcion = character(), 
     P.Unit = character(), 
-    Importe = character(), 
-    Peso = character(), 
+    Peso = character(),
     factura_simplificada = character(),
-    Cantidad = numeric(),
+    archivo = character(),  # Columna para almacenar el archivo
     stringsAsFactors = FALSE
   )
 
@@ -59,7 +59,6 @@ procesar_ticket <- function(fichero) {
   en_productos <- FALSE
   en_total <- FALSE
   contador_lineas <- 0
-  descripcion_temporal <- ""
 
   # Procesamos cada línea
   for (linea in lineas) {
@@ -108,24 +107,31 @@ procesar_ticket <- function(fichero) {
         # Caso 1: Línea con cantidad, descripción, precio e importe
         if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
           matches <- str_match(linea, "^(\\d+)\\s+(.+)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
-          cantidad <- as.numeric(matches[2])
+          cantidad <- as.numeric(matches[2])  # Número de unidades
           descripcion <- matches[3]
           precio_unitario <- matches[4]
-          importe <- matches[5]
           
-          temp_row <- data.frame(
-            Descripcion = descripcion,
-            P.Unit = precio_unitario,
-            Importe = importe,
-            Peso = NA,
-            factura_simplificada = factura_simplificada,
-            Cantidad = cantidad,
-            stringsAsFactors = FALSE
-          )
-          productos <- rbind(productos, temp_row)
+          # Buscamos el peso, suponiendo que el peso esté después de la descripción
+          peso <- NA
+          if (str_detect(linea, "kg|g|lb|oz")) {  # Comprobamos si el peso está en la línea
+            peso <- str_extract(linea, "\\d+[.,]?\\d*\\s*(kg|g|lb|oz)")
+          }
           
-        # Caso 2: Línea con descripción e importe (sin cantidad)
+          # Creamos una fila para cada unidad del producto
+          for (i in 1:cantidad) {
+            temp_row <- data.frame(
+              Descripcion = descripcion,
+              P.Unit = precio_unitario,
+              Peso = peso,  # Asignamos el peso extraído
+              factura_simplificada = factura_simplificada,
+              archivo = basename(fichero),  # Guardamos el nombre del archivo
+              stringsAsFactors = FALSE
+            )
+            productos <- rbind(productos, temp_row)
+          }
+          
         } else if (str_detect(linea, "^[A-Za-z].*\\d+,\\d{2}$")) {
+          # Caso 2: Línea con descripción e importe (sin cantidad)
           matches <- str_match(linea, "^(.*?)\\s+(\\d+,\\d{2})$")
           descripcion <- matches[2]
           importe <- matches[3]
@@ -133,10 +139,9 @@ procesar_ticket <- function(fichero) {
           temp_row <- data.frame(
             Descripcion = descripcion,
             P.Unit = NA,
-            Importe = importe,
             Peso = NA,
             factura_simplificada = factura_simplificada,
-            Cantidad = 1,
+            archivo = basename(fichero),  # Guardamos el nombre del archivo
             stringsAsFactors = FALSE
           )
           productos <- rbind(productos, temp_row)
@@ -164,11 +169,20 @@ procesar_ticket <- function(fichero) {
         if (str_detect(linea, "ARC:")) {
           ARC <- str_extract(linea, "ARC:\\s*(\\d+)") %>% str_remove("ARC:\\s*")
         }
+        
+        # Extraemos los tipos de IVA de todas las líneas de IVA (de forma similar al código de resumen_tickets)
+        if (str_detect(linea, "\\d+%\\s+[\\d,]+\\s+[\\d,]+")) {
+          iva_lineas <- str_extract_all(linea, "\\d+%\\s+[\\d,]+\\s+[\\d,]+")[[1]]
+          tipos_iva <- c(tipos_iva, str_extract(iva_lineas, "\\d+%"))  # Guardamos todos los tipos de IVA encontrados
+        }
       }
     }
   }
   
-  # Creamos el data frame del ticket
+  # Concatenamos los tipos de IVA únicos y los almacenamos como una cadena separada por comas
+  tipos_iva <- paste(unique(tipos_iva), collapse = ", ")
+
+  # Creamos el data frame del ticket con los tipos de IVA
   ticket_df <- data.frame(
     ubicacion = ubicacion,
     codigo_postal = codigo_postal,
@@ -183,6 +197,7 @@ procesar_ticket <- function(fichero) {
     AID = AID,
     AUT = AUT,
     ARC = ARC,
+    tipos_iva = tipos_iva,  # Añadimos la columna tipos_iva
     stringsAsFactors = FALSE
   )
   
@@ -190,8 +205,7 @@ procesar_ticket <- function(fichero) {
   return(list(ticket = ticket_df, productos = productos))
 }
 
-View(tickets_global) 
-View(productos_global)
+
 ```
 
 ```{r}
