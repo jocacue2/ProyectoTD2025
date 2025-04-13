@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 
 #Cargamos las librerías
-library(pdftools)
+library(pdftools) 
 library(stringr)
 library(dplyr)
 
