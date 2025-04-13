@@ -22,7 +22,8 @@ library(dplyr)
 ```
 
 
-```{r}# Creamos una función para procesar el contenido del PDF y extraiga la información
+```{r}
+# Creamos una función para procesar el contenido del PDF y extraiga la información
 procesar_ticket <- function(fichero) {
   # Leemos el contenido del PDF
 texto <- pdf_text(fichero_pdf)
