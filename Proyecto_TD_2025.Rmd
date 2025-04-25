@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(pdftools)
 library(stringr)
 library(dplyr)
+library(tinytex)
 
 ```
 
@@ -268,3 +269,101 @@ View(productos_global)
 write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
 write.csv(productos_global, "productos_global.csv", row.names = FALSE)
 ```
+
+# Introducción.
+
+Este proyecto tiene como objetivo desarrollar un algoritmo en el lenguaje de programación R capaz de realizar un análisis exhaustivo de tickets de compra en formato PDF, específicamente de los obtenidos en establecimientos de Mercadona. A través de este proceso, se busca extraer la información relevante de cada ticket y convertirla en un formato estructurado, como lo es el data frame, que facilita su análisis y manipulación.
+
+La importancia de este proyecto radica en la posibilidad de automatizar el proceso de recopilación de datos de tickets en formato PDF, que a menudo son difíciles de manejar debido a su estructura no estandarizada. El uso de R para esta tarea ofrece una gran flexibilidad y potencia a la hora de trabajar con datos y aplicar técnicas de análisis estadístico y visualización.
+
+El enfoque del proyecto se basa en la creación de un algoritmo eficiente que sea capaz de leer, interpretar y extraer información clave de los tickets, tales como: fecha de la compra, productos adquiridos, cantidades, precios y, especialmente, el impacto de factores como el IVA en el precio final de los productos. Este análisis podría proporcionar valiosas perspectivas sobre cómo ha afectado la evolución del IVA a los precios de productos específicos, lo que permitiría realizar comparativas a lo largo del tiempo.
+
+De este modo, será posible responder a preguntas clave relacionadas con la evolución de precios, las preferencias de consumo y los patrones de compra, tales como:
+
+Aquellas planteadas como comunes.
+
+  -   ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas? ¿Cuántas unidades de cada uno se han vendido?
+
+  -   Si consideramos la categoría de frutas y verduras, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
+
+  -   Si consideramos la categoría de pescado, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
+
+  -   Muestra mediante un gráfico de líneas cómo ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
+
+  -   ¿Cuál es la procedencia de los tickets? ¿Qué ciudad o pueblo tiene un mayor número de tickets?
+
+  -   Muestra mediante un diagrama el número de tickets recogidos cada día de la semana. ¿Si tuvieses que cerrar un día entre semana, qué día lo harías?
+  
+Aquellas planteadas por nuestro grupo.
+
+  -   ¿Cuánto ha subido el precio de la carne en el último año?
+
+  -   ¿Qué marca de leche es la más económica en Mercadona?
+
+  -   ¿Cuál es el chocolate más comprado por los consumidores?
+
+  -   ¿Qué carne tiene mejor relación calidad-precio: la de carnicería o la envasada al vacío?
+
+  -   ¿Qué productos han subido más de precio tras los cambios en el IVA?
+
+  -   ¿Hay diferencias de precios entre marcas blancas y marcas comerciales?
+
+  -   ¿Cuál es el día de la semana con mayor volumen de compras?
+
+  -   ¿En qué épocas del año se consume más pescado?
+
+  -   ¿Cuál es el ticket promedio de una compra mensual?
+
+  -   ¿Cuáles son los productos más frecuentes en los tickets?
+
+  -   ¿Cómo varían los precios de frutas y verduras según la temporada?
+
+  -   ¿Qué categoría de productos representa el mayor gasto por ticket?
+
+  -   ¿Qué marca de café prefieren los consumidores?
+
+  -   ¿Hay diferencia de precios entre el mismo producto comprado en diferentes fechas?
+
+  -   ¿Cuántos productos por ticket se compran en promedio?
+
+  -   ¿Qué productos tienen mayor carga impositiva por IVA?
+
+  -   ¿Qué tipo de pan se compra con más frecuencia?
+
+  -   ¿Los consumidores compran más productos frescos o envasados?
+
+  -   ¿Se observa una tendencia de aumento o disminución en la compra de productos ecológicos?
+
+  -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
+
+  -   ¿Hay productos que se compran sistemáticamente juntos (patrones de compra)?
+
+  -   ¿Cuánto gasta en promedio una persona en productos de limpieza por ticket?
+
+  -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
+
+  -   ¿Qué marcas se repiten más en los tickets analizados?
+
+  -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
+
+Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
+
+En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
+
+Los datos generales referentes al ticket almacenados en el data frame tendrán la misma forma como se muestran en la Figura \@ref(fig-tablas).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Tablaticket.jpg}
+  \caption{Ejemplo del data frame con la iformación general referente al ticket extraído del ticket de compra.}
+  \label{fig-tablas}
+\end{figure}
+
+Los datos específicos referentes a los productos del ticket se muestran en la Figura \@ref(fig-ticket).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Tablaproductos.jpg}
+  \caption{Ejemplo del data frame con la información específica referente al ticket extraído del ticket de compra.}
+  \label{fig-ticket}
+\end{figure}
