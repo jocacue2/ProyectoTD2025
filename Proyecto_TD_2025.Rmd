@@ -1,6 +1,6 @@
 ---
 title: "Proyecto Tickets TD"
-author: "José Ignacio Calatayud Cuenca"
+author: "José Ignacio Calatayud Cuenca, Marc Donato Merí, Manuel Giner Flores, Marc Navarro Montava, Eduardo Oltra Ramos e Isaac Ruiz Quitero"
 date: "2025-03-27"
 output: html_document
 ---
