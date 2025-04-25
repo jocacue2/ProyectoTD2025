@@ -261,13 +261,6 @@ for (pdf in archivos_pdf) {
 tickets_global <- bind_rows(lapply(lista_resultados, function(x) x$ticket))
 productos_global <- bind_rows(lapply(lista_resultados, function(x) x$productos))
 
-# Visualizamos los resultados.
-View(tickets_global)
-View(productos_global)
-
-# Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
-write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
-write.csv(productos_global, "productos_global.csv", row.names = FALSE)
 ```
 
 # Introducción.
@@ -350,20 +343,26 @@ Además, gracias a la estructura de datos generada por el algoritmo en R, se pod
 
 En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
 
-Los datos generales referentes al ticket almacenados en el data frame tendrán la misma forma como se muestran en la Figura \@ref(fig-tablas).
+## Datos del data frame general del ticket
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{Tablaticket.jpg}
-  \caption{Ejemplo del data frame con la iformación general referente al ticket extraído del ticket de compra.}
-  \label{fig-tablas}
-\end{figure}
+```{r tabla-ticket}
+datos_tickets <- tickets_global %>% head(5) 
 
-Los datos específicos referentes a los productos del ticket se muestran en la Figura \@ref(fig-ticket).
+knitr::kable(datos_tickets, 
+             caption = "Ejemplo del data frame con la iformación general referente al ticket", 
+             booktabs = TRUE)
+```
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{Tablaproductos.jpg}
-  \caption{Ejemplo del data frame con la información específica referente al ticket extraído del ticket de compra.}
-  \label{fig-ticket}
-\end{figure}
+Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla-autos).
+
+## Datos del data frame de productos del ticket
+
+```{r tabla-productos}
+datos_productos <- productos_global %>% head(5) 
+
+knitr::kable(productos_global, 
+             caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
+             booktabs = TRUE)
+```
+
+Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
