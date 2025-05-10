@@ -50,8 +50,7 @@ procesar_ticket <- function(fichero) {
     Descripcion = character(), 
     P.Unit = character(), 
     Peso = character(),
-    factura_simplificada = character(),
-    stringsAsFactors = FALSE
+    Importe = character()
   )
 
   # Inicializamos variables de control.
@@ -129,7 +128,7 @@ procesar_ticket <- function(fichero) {
         
         # Detecta la línea típica de producto con cantidad, descripción, precio unitario e importe total.
         if (str_detect(linea, "^[[:digit:]]+[ ]+.+[ ]+[[:digit:]]+,[[:digit:]]{2}[ ]+[[:digit:]]+,[[:digit:]]{2}$")) {
-          partes_p <- strsplit(linea, " +")[[1]]
+          partes_p <- strsplit(linea, "[ ]+")[[1]]
           cantidad <- as.numeric(partes_p[1])
           if (length(partes_p) == 4) {
             # Hay peso
@@ -149,55 +148,20 @@ procesar_ticket <- function(fichero) {
           }
         }
         
-          for (i in 1:cantidad) {
-            temp_row <- data.frame(
-              Descripcion = descripcion,
-              P.Unit = precio_unitario,
-              Peso = peso,
-              factura_simplificada = factura_simplificada,
-              stringsAsFactors = FALSE
-            )
-            productos <- rbind(productos, temp_row)
-          }
-
-        # Línea que solo contiene la descripción, y el resto aparece en la siguiente línea (productos con peso).
-        } else if (str_detect(linea, "^[A-Za-z0-9].*") && !str_detect(linea, "\\d+,\\d{2}$")) {
-          descripcion_temp <- linea
-          next_line_index <- contador_lineas + 1
-          if (next_line_index <= length(lineas)) {
-            siguiente_linea <- str_trim(lineas[next_line_index])
-            if (str_detect(siguiente_linea, "^\\d+[.,]\\d+\\s*(kg|g|lb|oz)\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
-              matches <- str_match(siguiente_linea, "^(\\d+[.,]\\d+)\\s*(kg|g|lb|oz)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
-              peso <- paste(matches[2], matches[3])
-              precio_unitario <- matches[4]
-              temp_row <- data.frame(
-                Descripcion = descripcion_temp,
-                P.Unit = precio_unitario,
-                Peso = peso,
-                factura_simplificada = factura_simplificada,
-                stringsAsFactors = FALSE
-              )
-              productos <- rbind(productos, temp_row)
-              contador_lineas <- next_line_index  # Avanzamos una línea extra
-            }
-          }
-
-        # Línea con descripción e importe directo, sin precio unitario ni peso.
-        } else if (str_detect(linea, "^[A-Za-z].*\\d+,\\d{2}$")) {
-          matches <- str_match(linea, "^(.*?)\\s+(\\d+,\\d{2})$")
-          descripcion <- matches[2]
-          importe <- matches[3]
-          temp_row <- data.frame(
-            Descripcion = descripcion,
-            P.Unit = NA,
-            Peso = NA,
-            factura_simplificada = factura_simplificada,
-            stringsAsFactors = FALSE
-          )
-          productos <- rbind(productos, temp_row)
+        if (str_detect(str_trim(linea), "^[[:digit:]]+ kg[ ]+[[:digit:]]€/kg[ ]+[[:digit:]]+$")) {
+          partes_p1 <- strsplit(linea, "[ ]+")[[1]]
+          cantidad <- as.numeric(partes_p1[1])
+          descripcion <- partes_p1[2]
+          
+        } 
+        
+        if (str_detect(str_trim(linea), "^[[:digit:]]+[ ]+[[:alpha:]]+$")) {
+          partes_p2 <- strsplit(linea, "[ ]+")[[1]]
+          Peso <- partes_p2[1]
+          P.Unit <- partes_p2[2]
+          Importe <- partes_p2[3]
         }
-      }
-
+          
       # Fin de productos: aparece la línea de TOTAL (€).
       if (str_detect(linea, "TOTAL \\(€\\)")) {
         en_productos <- FALSE
@@ -248,10 +212,10 @@ procesar_ticket <- function(fichero) {
     AUT = AUT,
     ARC = ARC,
     tipos_iva = tipos_iva,
-    stringsAsFactors = FALSE
   )
 
   return(list(ticket = ticket_df, productos = productos))
+  }
 }
 
 ```
