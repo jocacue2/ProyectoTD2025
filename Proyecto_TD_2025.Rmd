@@ -147,40 +147,12 @@ procesar_ticket <- function(fichero) {
             productos <- rbind(productos, temp_row)
           }
         }
-        # Línea donde la descripción está en una línea y el resto (peso, precio, importe) en la siguiente.
-        else if (str_detect(linea, "^[A-Za-z0-9].*") && !str_detect(linea, "\\d+,\\d{2}$")) {
-          descripcion_temp <- linea
-          next_line_index <- contador_lineas + 1
-          if (next_line_index <= length(lineas)) {
-            siguiente_linea <- str_trim(lineas[next_line_index])
-            if (str_detect(siguiente_linea, "^\\d+[.,]\\d+\\s*(kg|g|lb|oz)\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
-              matches <- str_match(siguiente_linea, "^(\\d+[.,]\\d+)\\s*(kg|g|lb|oz)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
-              peso <- paste(matches[2], matches[3])
-              precio_unitario <- matches[4]
-              temp_row <- data.frame(
-                Descripcion = descripcion_temp,
-                P.Unit = precio_unitario,
-                Peso = peso,
-                factura_simplificada = factura_simplificada,
-                stringsAsFactors = FALSE
-              )
-              productos <- rbind(productos, temp_row)
-              contador_lineas <- next_line_index  # Avanzamos una línea extra
-            }
-          }
-        }
-        # Línea con descripción e importe directo (sin precio unitario).
-        else if (str_detect(linea, "^[A-Za-z].*\\d+,\\d{2}$")) {
-          matches <- str_match(linea, "^(.*?)\\s+(\\d+,\\d{2})$")
-          descripcion <- matches[2]
-          temp_row <- data.frame(
-            Descripcion = descripcion,
-            P.Unit = NA,
-            Peso = NA,
-            factura_simplificada = factura_simplificada,
-            stringsAsFactors = FALSE
-          )
-          productos <- rbind(productos, temp_row)
+        # Linea que detecte pescado.
+        else if (str_detect(linea, "^PESCADO$")) {
+          
+          
+          
+          
         }
       }
       
