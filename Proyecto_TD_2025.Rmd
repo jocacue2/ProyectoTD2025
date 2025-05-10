@@ -65,6 +65,8 @@ procesar_ticket <- function(fichero) {
     contador_lineas <- contador_lineas + 1
     linea <- str_trim(linea)  # Quitamos espacios extra
     
+    # SECCIÓN GENERAL.
+    
     # Detectamos que el ticket es válido si aparece "MERCADONA".
     if (str_detect(linea, "MERCADONA, S.A.")) {
       ticket_valido <- TRUE
@@ -100,7 +102,7 @@ procesar_ticket <- function(fichero) {
         fecha <- partes_5[1]
         hora <- partes_5[2]
         op_encontrado <- str_extract(linea, "OP:\\s*\\d+")
-        # Comprueba que halla encontrado el op y solo extrae la parte númerica.
+        # Comprueba que halla encontrado el op y solo extrae la parte numérica.
         op <- ifelse(
           !is.na(op_encontrado),
           str_extract(op_encontrado,
@@ -110,17 +112,20 @@ procesar_ticket <- function(fichero) {
 
       # Línea 6: número de factura simplificada.
       if (contador_lineas == 6) {
+        # Quitamos los espacios en blanco del inicio y final de la cadena y substraemos "FACTURA SIMPLIFICADA:".
         factura_simplificada <- str_trim(sub("FACTURA SIMPLIFICADA:", "", linea))
       }
 
       # Detección del inicio de productos.
-      if (str_detect(linea, "Descripción|Description") & str_detect(linea, "P\\. Unit|Importe")) {
+      if (str_detect(linea, "^[ ]*Descripción[ ]+P[.] Unit[ ]+Importe[ ]*$")) {
         en_productos <- TRUE
         next
       }
 
-      # Sección de productos.
-      if (en_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
+      # SECCIÓN PRODUCTOS.
+      
+      # Si esta en productos y no detecta la palabra TOTAL (€).
+      if (en_productos && !str_detect(linea, "TOTAL [(]€[)]")) {
         
         # Línea típica de producto con cantidad, descripción, precio unitario e importe total.
         if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
