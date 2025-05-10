@@ -150,13 +150,20 @@ procesar_ticket <- function(fichero) {
         
         
         # Linea que detecte pescado.
-        else if (str_detect(linea, "^PESCADO$") | zona_pescaderia == TRUE) {
-                zona_pescaderia <- TRUE  
+        else if (str_detect(linea, "^PESCADO$") | zona_pesos == TRUE %% !str_detect(linea, "TOTAL \\(€\\)")) {
+                zona_pesos <- TRUE  
 
  
           if (str_detect(linea, "^[A-ZÁÉÍÓÚÜÑ]+(?:\s+[A-ZÁÉÍÓÚÜÑ]+)*$")) {
                    descripcion <- linea
-              }
+          }
+          
+          else if (str_detect(linea, "^\\d+(?:\\.\\d+)?\\s+[A-ZÁÉÍÓÚÜÑ]+(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)*$")) {
+                    matches <- str_match(linea, "^(\\d+(?:\\.\\d+)?)\\s+([A-ZÁÉÍÓÚÜÑ]+(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)*)$")
+  
+                    if (!is.na(matches[1, 1])) {
+                    cantidad <- matches[1, 2]  # Extrae la cantidad
+                    descripcion <- matches[1, 3]}}
   
           else if (str_detect(linea, "^([0-9]+,[0-9]+) +kg +([0-9]+,[0-9]+) €/kg +([0-9]+,[0-9]+)$")) {
                   matches <- str_match(linea, "^([0-9]+,[0-9]+) +kg +([0-9]+,[0-9]+) €/kg +([0-9]+,[0-9]+)$")
@@ -174,12 +181,12 @@ procesar_ticket <- function(fichero) {
     
                     productos <- rbind(productos, temp_row)
                     
-                    if (str_detect())
+            else if (str_detect(linea, ""))
     
                   
     
     
-    zona_pescaderia <- FALSE
+    
   }
 }
       
