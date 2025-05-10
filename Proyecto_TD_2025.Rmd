@@ -148,7 +148,9 @@ procesar_ticket <- function(fichero) {
           }
         }
         # Linea que detecte pescado.
-        else if (str_detect(linea, "^PESCADO$")) {
+        else if (str_detect(linea, "^PESCADO$") | zona_pescaderia == TRUE) {
+          zona_pescaderia = TRUE
+          if (str_detect(linea, ""))
           
           
           
