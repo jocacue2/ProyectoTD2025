@@ -27,7 +27,7 @@ procesar_ticket <- function(fichero) {
   # Extraemos texto del PDF.
   texto <- pdf_text(fichero)
   # Separamos el texto por líneas.
-  lineas <- unlist(strsplit(texto, "\n"))             
+  lineas <- unlist(strsplit(texto, "\n"))
   
   # Inicializamos variables del encabezado del ticket.
   ubicacion <- NA
@@ -64,8 +64,8 @@ procesar_ticket <- function(fichero) {
   for (linea in lineas) {
     contador_lineas <- contador_lineas + 1
     linea <- str_trim(linea)  # Quitamos espacios extra
-    
-    # Detectamos que el ticket es válido si aparece "MERCADONA".
+
+    # Detectamos que el ticket es válido si aparece "MERCADONA, S.A."
     if (str_detect(linea, "MERCADONA, S.A.")) {
       ticket_valido <- TRUE
     }
@@ -102,16 +102,16 @@ procesar_ticket <- function(fichero) {
         factura_simplificada <- str_trim(sub("FACTURA SIMPLIFICADA:", "", linea))
       }
 
-      # Detección del inicio de productos.
-      if (str_detect(linea, "Descripción|Description") & str_detect(linea, "P\\. Unit|Importe")) {
+      # Detección del encabezado de productos.
+      if (str_detect(linea, "Descripción|Description") && 
+          str_detect(linea, "P\\. Unit|Importe")) {
         en_productos <- TRUE
-        next
+        next  # Saltamos esta línea
       }
 
       # Sección de productos.
       if (en_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
-        
-        # Línea típica de producto con cantidad, descripción, precio unitario e importe total.
+        # Línea típica: cantidad, descripción, precio unitario e importe total.
         if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
           matches <- str_match(linea, "^(\\d+)\\s+(.+)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
           cantidad <- as.numeric(matches[2])
@@ -126,17 +126,17 @@ procesar_ticket <- function(fichero) {
               factura_simplificada = factura_simplificada,
               stringsAsFactors = FALSE
             )
-          
             productos <- rbind(productos, temp_row)
-          }}
-        
-          else if (str_detect(linea, "^(\d+)\s+(.+?)\s+(\d+,\d{2})$")) {
-            matches <- str_match(linea, "^(\d+)\s+(.+?)\s+(\d+,\d{2})$")
-            cantidad <- as.numeric(matches[2])
-            descripcion <- matches[3]
-            precio_unitario <- matches[4]
-            peso <- NA
-            for (i in 1:cantidad) {
+          }
+        }
+        # Línea con cantidad, descripción e importe directo.
+        else if (str_detect(linea, "^(\\d+)\\s+(.+?)\\s+(\\d+,\\d{2})$")) {
+          matches <- str_match(linea, "^(\\d+)\\s+(.+?)\\s+(\\d+,\\d{2})$")
+          cantidad <- as.numeric(matches[2])
+          descripcion <- matches[3]
+          precio_unitario <- matches[4]
+          peso <- NA
+          for (i in 1:cantidad) {
             temp_row <- data.frame(
               Descripcion = descripcion,
               P.Unit = precio_unitario,
@@ -144,11 +144,11 @@ procesar_ticket <- function(fichero) {
               factura_simplificada = factura_simplificada,
               stringsAsFactors = FALSE
             )
-          
-            productos <- rbind(productos, temp_row)}}
-
-        # Línea que solo contiene la descripción, y el resto aparece en la siguiente línea (productos con peso).
-        } else if (str_detect(linea, "^[A-Za-z0-9].*") && !str_detect(linea, "\\d+,\\d{2}$")) {
+            productos <- rbind(productos, temp_row)
+          }
+        }
+        # Línea donde la descripción está en una línea y el resto (peso, precio, importe) en la siguiente.
+        else if (str_detect(linea, "^[A-Za-z0-9].*") && !str_detect(linea, "\\d+,\\d{2}$")) {
           descripcion_temp <- linea
           next_line_index <- contador_lineas + 1
           if (next_line_index <= length(lineas)) {
@@ -168,12 +168,11 @@ procesar_ticket <- function(fichero) {
               contador_lineas <- next_line_index  # Avanzamos una línea extra
             }
           }
-
-        # Línea con descripción e importe directo, sin precio unitario ni peso.
-        } else if (str_detect(linea, "^[A-Za-z].*\\d+,\\d{2}$")) {
+        }
+        # Línea con descripción e importe directo (sin precio unitario).
+        else if (str_detect(linea, "^[A-Za-z].*\\d+,\\d{2}$")) {
           matches <- str_match(linea, "^(.*?)\\s+(\\d+,\\d{2})$")
           descripcion <- matches[2]
-          importe <- matches[3]
           temp_row <- data.frame(
             Descripcion = descripcion,
             P.Unit = NA,
@@ -184,41 +183,48 @@ procesar_ticket <- function(fichero) {
           productos <- rbind(productos, temp_row)
         }
       }
-
+      
       # Fin de productos: aparece la línea de TOTAL (€).
       if (str_detect(linea, "TOTAL \\(€\\)")) {
         en_productos <- FALSE
         en_total <- TRUE
         importe_total <- str_extract(linea, "\\d+,\\d{2}")
       }
-
+      
       # Sección de totales, impuestos y códigos de pago.
       if (en_total) {
         if (str_detect(linea, "N\\.C:")) {
-          N.C <- str_extract(linea, "N\\.C:\\s*(\\d+)") %>% str_remove("N\\.C:\\s*")
+          N.C <- str_extract(linea, "N\\.C:\\s*(\\d+)") %>% 
+            str_remove("N\\.C:\\s*")
         }
         if (str_detect(linea, "AID:")) {
-          AID <- str_extract(linea, "AID:\\s*(\\S+)") %>% str_remove("AID:\\s*")
+          AID <- str_extract(linea, "AID:\\s*(\\S+)") %>% 
+            str_remove("AID:\\s*")
         }
         if (str_detect(linea, "AUT:")) {
-          AUT <- str_extract(linea, "AUT:\\s*(\\d+)") %>% str_remove("AUT:\\s*")
+          AUT <- str_extract(linea, "AUT:\\s*(\\d+)") %>% 
+            str_remove("AUT:\\s*")
         }
         if (str_detect(linea, "ARC:")) {
-          ARC <- str_extract(linea, "ARC:\\s*(\\d+)") %>% str_remove("ARC:\\s*")
+          ARC <- str_extract(linea, "ARC:\\s*(\\d+)") %>% 
+            str_remove("ARC:\\s*")
         }
-
-        # Detección de los tipos de IVA.
-        if (str_detect(linea, "\\d+%\\s+[\\d,]+\\s+[\\d,]+")) {
-          iva_lineas <- str_extract_all(linea, "\\d+%\\s+[\\d,]+\\s+[\\d,]+")[[1]]
-          tipos_iva <- c(tipos_iva, str_extract(iva_lineas, "\\d+%"))
+        
+        # Detección de los tipos de IVA (porcentaje, base y cuota).
+        if (str_detect(linea, "\\d+%")) {
+          iva_matches <- str_match_all(linea, "(\\d+%)")[[1]]
+          if (nrow(iva_matches) > 0) {
+            tipos_iva <- c(tipos_iva, iva_matches[,1])
+            }
+          }
         }
       }
-    }
-  }
-
+    }  
+  
+  # Unificamos las cadenas de IVA detectadas.
   tipos_iva <- paste(unique(tipos_iva), collapse = ", ")
-
-  # Data frame con la información general del ticket.
+  
+  # Creamos el data frame con la información general del ticket.
   ticket_df <- data.frame(
     archivo = basename(fichero),
     ubicacion = ubicacion,
@@ -237,9 +243,10 @@ procesar_ticket <- function(fichero) {
     tipos_iva = tipos_iva,
     stringsAsFactors = FALSE
   )
-
+  
+  # Retornamos una lista con los dos data frames.
   return(list(ticket = ticket_df, productos = productos))
-
+}
 
 ```
 
