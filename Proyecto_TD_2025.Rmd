@@ -1,6 +1,6 @@
 ---
 title: "Proyecto Tickets TD"
-author: "José Ignacio Calatayud Cuenca, Marc Donato Merí, Manuel Giner Flores, Marc Navarro Montava, Eduardo Oltra Ramos e Isaac Ruiz Quitero"
+author: "José Ignacio Calatayud Cuenca"
 date: "2025-03-27"
 output: html_document
 ---
@@ -17,7 +17,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(pdftools)
 library(stringr)
 library(dplyr)
-library(tinytex)
 
 ```
 
@@ -29,6 +28,7 @@ procesar_ticket <- function(fichero) {
   texto <- pdf_text(fichero)
   # Separamos el texto por líneas.
   lineas <- unlist(strsplit(texto, "\n"))             
+  
   # Inicializamos variables del encabezado del ticket.
   ubicacion <- NA
   codigo_postal <- NA
@@ -65,13 +65,11 @@ procesar_ticket <- function(fichero) {
     contador_lineas <- contador_lineas + 1
     linea <- str_trim(linea)  # Quitamos espacios extra
     
-    # SECCIÓN GENERAL.
-    
     # Detectamos que el ticket es válido si aparece "MERCADONA".
     if (str_detect(linea, "MERCADONA, S.A.")) {
       ticket_valido <- TRUE
     }
-    # Si encontramos MERCADONA, S.A decidimos que el ticket es válido y procedemos a extraer la información.
+
     if (ticket_valido) {
       # Línea 2: dirección de la tienda.
       if (contador_lineas == 2) {
@@ -80,52 +78,38 @@ procesar_ticket <- function(fichero) {
       
       # Línea 3: código postal y localidad.
       if (contador_lineas == 3) {
-        partes_3 <- strsplit(linea, " ")[[1]]
-        codigo_postal <- partes_3[1]
-        # Contruimos la localidad con el resto de los trozos restantes, sería útil por ejemplo para "La Rioga".
-        localidad <- ifelse(
-          length(partes_3) >= 2,
-          paste(partes_3[-1],
-          collapse = " "),
-          NA)
+        partes <- strsplit(linea, " ")[[1]]
+        codigo_postal <- partes[1]
+        localidad <- ifelse(length(partes) >= 2, paste(partes[-1], collapse = " "), NA)
       }
       
       # Línea 4: teléfono.
       if (contador_lineas == 4) {
-        # Quitamos los espacios en blanco del inicio y final de la cadena y substraemos "TELÉFONO:".
         telefono_tienda <- str_trim(sub("TELÉFONO:", "", linea))
       }
 
       # Línea 5: fecha, hora y operador (OP).
       if (contador_lineas == 5) {
-        partes_5 <- strsplit(linea, " ")[[1]]
-        fecha <- partes_5[1]
-        hora <- partes_5[2]
+        partes <- strsplit(linea, " ")[[1]]
+        fecha <- partes[1]
+        hora <- partes[2]
         op_encontrado <- str_extract(linea, "OP:\\s*\\d+")
-        # Comprueba que halla encontrado el op y solo extrae la parte numérica.
-        op <- ifelse(
-          !is.na(op_encontrado),
-          str_extract(op_encontrado,
-          "[[:digit:]]+"),
-          NA)
+        op <- ifelse(!is.na(op_encontrado), str_extract(op_encontrado, "\\d+"), NA)
       }
 
       # Línea 6: número de factura simplificada.
       if (contador_lineas == 6) {
-        # Quitamos los espacios en blanco del inicio y final de la cadena y substraemos "FACTURA SIMPLIFICADA:".
         factura_simplificada <- str_trim(sub("FACTURA SIMPLIFICADA:", "", linea))
       }
 
       # Detección del inicio de productos.
-      if (str_detect(linea, "^[ ]*Descripción[ ]+P[.] Unit[ ]+Importe[ ]*$")) {
+      if (str_detect(linea, "Descripción|Description") & str_detect(linea, "P\\. Unit|Importe")) {
         en_productos <- TRUE
         next
       }
 
-      # SECCIÓN PRODUCTOS.
-      
-      # Si esta en productos y no detecta la palabra TOTAL (€).
-      if (en_productos && !str_detect(linea, "TOTAL [(]€[)]")) {
+      # Sección de productos.
+      if (en_productos && !str_detect(linea, "TOTAL \\(€\\)")) {
         
         # Línea típica de producto con cantidad, descripción, precio unitario e importe total.
         if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
@@ -145,7 +129,15 @@ procesar_ticket <- function(fichero) {
               factura_simplificada = factura_simplificada,
               stringsAsFactors = FALSE
             )
+          
             productos <- rbind(productos, temp_row)
+          }
+          else if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}$")) {
+            matches <- str_match(linea, "^(\\d+)\\s+(.+)\\s+(\\d+,\\d{2})$")
+            cantidad <- as.numeric(matches[2])
+            descripcion <- matches[3]
+            precio_unitario <- matches[4]
+            peso <- NA
           }
 
         # Línea que solo contiene la descripción, y el resto aparece en la siguiente línea (productos con peso).
@@ -276,108 +268,11 @@ for (pdf in archivos_pdf) {
 tickets_global <- bind_rows(lapply(lista_resultados, function(x) x$ticket))
 productos_global <- bind_rows(lapply(lista_resultados, function(x) x$productos))
 
+# Visualizamos los resultados.
+View(tickets_global)
+View(productos_global)
+
+# Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
+write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
+write.csv(productos_global, "productos_global.csv", row.names = FALSE)
 ```
-
-# Introducción.
-
-Este proyecto tiene como objetivo desarrollar un algoritmo en el lenguaje de programación R capaz de realizar un análisis exhaustivo de tickets de compra en formato PDF, específicamente de los obtenidos en establecimientos de Mercadona. A través de este proceso, se busca extraer la información relevante de cada ticket y convertirla en un formato estructurado, como lo es el data frame, que facilita su análisis y manipulación.
-
-La importancia de este proyecto radica en la posibilidad de automatizar el proceso de recopilación de datos de tickets en formato PDF, que a menudo son difíciles de manejar debido a su estructura no estandarizada. El uso de R para esta tarea ofrece una gran flexibilidad y potencia a la hora de trabajar con datos y aplicar técnicas de análisis estadístico y visualización.
-
-El enfoque del proyecto se basa en la creación de un algoritmo eficiente que sea capaz de leer, interpretar y extraer información clave de los tickets, tales como: fecha de la compra, productos adquiridos, cantidades, precios y, especialmente, el impacto de factores como el IVA en el precio final de los productos. Este análisis podría proporcionar valiosas perspectivas sobre cómo ha afectado la evolución del IVA a los precios de productos específicos, lo que permitiría realizar comparativas a lo largo del tiempo.
-
-De este modo, será posible responder a preguntas clave relacionadas con la evolución de precios, las preferencias de consumo y los patrones de compra, tales como:
-
-Aquellas planteadas como comunes.
-
-  -   ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas? ¿Cuántas unidades de cada uno se han vendido?
-
-  -   Si consideramos la categoría de frutas y verduras, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
-
-  -   Si consideramos la categoría de pescado, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
-
-  -   Muestra mediante un gráfico de líneas cómo ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
-
-  -   ¿Cuál es la procedencia de los tickets? ¿Qué ciudad o pueblo tiene un mayor número de tickets?
-
-  -   Muestra mediante un diagrama el número de tickets recogidos cada día de la semana. ¿Si tuvieses que cerrar un día entre semana, qué día lo harías?
-  
-Aquellas planteadas por nuestro grupo.
-
-  -   ¿Cuánto ha subido el precio de la carne en el último año?
-
-  -   ¿Qué marca de leche es la más económica en Mercadona?
-
-  -   ¿Cuál es el chocolate más comprado por los consumidores?
-
-  -   ¿Qué carne tiene mejor relación calidad-precio: la de carnicería o la envasada al vacío?
-
-  -   ¿Qué productos han subido más de precio tras los cambios en el IVA?
-
-  -   ¿Hay diferencias de precios entre marcas blancas y marcas comerciales?
-
-  -   ¿Cuál es el día de la semana con mayor volumen de compras?
-
-  -   ¿En qué épocas del año se consume más pescado?
-
-  -   ¿Cuál es el ticket promedio de una compra mensual?
-
-  -   ¿Cuáles son los productos más frecuentes en los tickets?
-
-  -   ¿Cómo varían los precios de frutas y verduras según la temporada?
-
-  -   ¿Qué categoría de productos representa el mayor gasto por ticket?
-
-  -   ¿Qué marca de café prefieren los consumidores?
-
-  -   ¿Hay diferencia de precios entre el mismo producto comprado en diferentes fechas?
-
-  -   ¿Cuántos productos por ticket se compran en promedio?
-
-  -   ¿Qué productos tienen mayor carga impositiva por IVA?
-
-  -   ¿Qué tipo de pan se compra con más frecuencia?
-
-  -   ¿Los consumidores compran más productos frescos o envasados?
-
-  -   ¿Se observa una tendencia de aumento o disminución en la compra de productos ecológicos?
-
-  -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
-
-  -   ¿Hay productos que se compran sistemáticamente juntos (patrones de compra)?
-
-  -   ¿Cuánto gasta en promedio una persona en productos de limpieza por ticket?
-
-  -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
-
-  -   ¿Qué marcas se repiten más en los tickets analizados?
-
-  -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
-
-Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
-
-En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
-
-## Datos del data frame general del ticket
-
-```{r tabla-ticket}
-datos_tickets <- tickets_global %>% head(5) 
-
-knitr::kable(datos_tickets, 
-             caption = "Ejemplo del data frame con la iformación general referente al ticket", 
-             booktabs = TRUE)
-```
-
-Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla-autos).
-
-## Datos del data frame de productos del ticket
-
-```{r tabla-productos}
-datos_productos <- productos_global %>% head(5) 
-
-knitr::kable(productos_global, 
-             caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
-             booktabs = TRUE)
-```
-
-Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
