@@ -29,7 +29,6 @@ procesar_ticket <- function(fichero) {
   texto <- pdf_text(fichero)
   # Separamos el texto por líneas.
   lineas <- unlist(strsplit(texto, "\n"))             
-  
   # Inicializamos variables del encabezado del ticket.
   ubicacion <- NA
   codigo_postal <- NA
@@ -70,7 +69,7 @@ procesar_ticket <- function(fichero) {
     if (str_detect(linea, "MERCADONA, S.A.")) {
       ticket_valido <- TRUE
     }
-
+    # Si encontramos MERCADONA, S.A decidimos que el ticket es válido y procedemos a extraer la información.
     if (ticket_valido) {
       # Línea 2: dirección de la tienda.
       if (contador_lineas == 2) {
@@ -79,23 +78,34 @@ procesar_ticket <- function(fichero) {
       
       # Línea 3: código postal y localidad.
       if (contador_lineas == 3) {
-        partes <- strsplit(linea, " ")[[1]]
-        codigo_postal <- partes[1]
-        localidad <- ifelse(length(partes) >= 2, paste(partes[-1], collapse = " "), NA)
+        partes_3 <- strsplit(linea, " ")[[1]]
+        codigo_postal <- partes_3[1]
+        # Contruimos la localidad con el resto de los trozos restantes, sería útil por ejemplo para "La Rioga".
+        localidad <- ifelse(
+          length(partes_3) >= 2,
+          paste(partes_3[-1],
+          collapse = " "),
+          NA)
       }
       
       # Línea 4: teléfono.
       if (contador_lineas == 4) {
+        # Quitamos los espacios en blanco del inicio y final de la cadena y substraemos "TELÉFONO:".
         telefono_tienda <- str_trim(sub("TELÉFONO:", "", linea))
       }
 
       # Línea 5: fecha, hora y operador (OP).
       if (contador_lineas == 5) {
-        partes <- strsplit(linea, " ")[[1]]
-        fecha <- partes[1]
-        hora <- partes[2]
+        partes_5 <- strsplit(linea, " ")[[1]]
+        fecha <- partes_5[1]
+        hora <- partes_5[2]
         op_encontrado <- str_extract(linea, "OP:\\s*\\d+")
-        op <- ifelse(!is.na(op_encontrado), str_extract(op_encontrado, "\\d+"), NA)
+        # Comprueba que halla encontrado el op y solo extrae la parte númerica.
+        op <- ifelse(
+          !is.na(op_encontrado),
+          str_extract(op_encontrado,
+          "[[:digit:]]+"),
+          NA)
       }
 
       # Línea 6: número de factura simplificada.
