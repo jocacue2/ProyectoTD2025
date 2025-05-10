@@ -248,6 +248,7 @@ procesar_ticket <- function(fichero) {
   return(list(ticket = ticket_df, productos = productos))
 }
 
+
 ```
 
 ```{r}
