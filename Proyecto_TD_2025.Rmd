@@ -82,7 +82,7 @@ procesar_ticket <- function(fichero) {
       if (contador_lineas == 3) {
         partes_3 <- strsplit(linea, " ")[[1]]
         codigo_postal <- partes_3[1]
-        # Contruimos la localidad con el resto de los trozos restantes, sería útil por ejemplo para "La Rioga".
+        # Construimos la localidad con el resto de los trozos restantes, sería útil por ejemplo para "La Rioga".
         localidad <- ifelse(
           length(partes_3) >= 2,
           paste(partes_3[-1],
@@ -127,16 +127,28 @@ procesar_ticket <- function(fichero) {
       # Si esta en productos y no detecta la palabra TOTAL (€).
       if (en_productos && !str_detect(linea, "TOTAL [(]€[)]")) {
         
-        # Línea típica de producto con cantidad, descripción, precio unitario e importe total.
-        if (str_detect(linea, "^\\d+\\s+.+\\s+\\d+,\\d{2}\\s+\\d+,\\d{2}$")) {
-          matches <- str_match(linea, "^(\\d+)\\s+(.+)\\s+(\\d+,\\d{2})\\s+(\\d+,\\d{2})$")
-          cantidad <- as.numeric(matches[2])
-          descripcion <- matches[3]
-          precio_unitario <- matches[4]
-          peso <- NA
-          if (str_detect(linea, "kg|g|lb|oz")) {
-            peso <- str_extract(linea, "\\d+[.,]?\\d*\\s*(kg|g|lb|oz)")
+        # Detecta la línea típica de producto con cantidad, descripción, precio unitario e importe total.
+        if (str_detect(linea, "^[[:digit:]]+[ ]+.+[ ]+[[:digit:]]+,[[:digit:]]{2}[ ]+[[:digit:]]+,[[:digit:]]{2}$")) {
+          partes_p <- strsplit(linea, " +")[[1]]
+          cantidad <- as.numeric(partes_p[1])
+          if (length(partes_p) == 4) {
+            # Hay peso
+            descripcion       <- partes_p[2]
+            peso              <- partes_p[3]
+            precio_unitario   <- partes_p[4]
+          } else if (length(partes_p) == 3) {
+            # No hay peso
+            descripcion       <- partes_p[2]
+            peso              <- NA
+            precio_unitario   <- partes_p[3]
+          } else {
+            # Caso inesperado
+            descripcion     <- NA
+            peso            <- NA
+            precio_unitario <- NA
           }
+        }
+        
           for (i in 1:cantidad) {
             temp_row <- data.frame(
               Descripcion = descripcion,
