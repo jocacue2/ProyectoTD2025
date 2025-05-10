@@ -340,7 +340,7 @@ Aquellas planteadas por nuestro grupo.
 
   -   ¿En qué épocas del año se consume más pescado?
   
-  -     ¿Cuál es el ticket promedio de una compra mensual?
+  -   ¿Cuál es el ticket promedio de una compra mensual?
 
   -   ¿Cuáles son los productos más frecuentes en los tickets?
 
