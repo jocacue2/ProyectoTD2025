@@ -17,6 +17,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(pdftools)
 library(stringr)
 library(dplyr)
+library(lubridate)
+library(ggplot2)
 
 ```
 
@@ -423,7 +425,34 @@ productos_p_masvendidos
 
   -   ¿Cuál es la procedencia de los tickets? ¿Qué ciudad o pueblo tiene un mayor número de tickets?
 
+```{r}
+
+tickets_global %>% 
+  count(localidad, sort = TRUE) %>%
+  head(10)
+
+```
+Como podemos observar Valencia es la ciudad con más tickets.
+
   -   Muestra mediante un diagrama el número de tickets recogidos cada día de la semana. ¿Si tuvieses que cerrar un día entre semana, qué día lo harías?
+  
+```{r}
+
+# Contamos los tickets por día de la semana.
+tickets_semana <- tickets_global %>%
+  mutate( dia_semana = wday(fecha, label = TRUE, abbr = FALSE, week_start = 1)) %>%
+  count(dia_semana, name = "tickets") 
+
+# Creamos el diagrama de barras.
+ggplot(tickets_semana, aes(x = dia_semana, y = tickets)) +
+  geom_col() +
+  labs(
+    title = "Tickets recogidos según día de la semana",
+    x = "Día de la semana",
+    y = "Número de tickets")
+
+```
+
   
 Aquellas planteadas por nuestro grupo.
 
