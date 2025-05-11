@@ -310,6 +310,15 @@ for (pdf in archivos_pdf) {
 tickets_global <- bind_rows(lapply(lista_resultados, function(x) x$ticket))
 productos_global <- bind_rows(lapply(lista_resultados, function(x) x$productos))
 
+# Pasamos las columnas de productos_global a númerico.
+
+productos_global <- productos_global %>%
+  mutate(
+    Peso = as.numeric(gsub(",", ".", Peso)),
+    P.Unit = as.numeric(gsub(",", ".", P.Unit)),
+    Importe = as.numeric(gsub(",", ".", Importe))
+  )
+
 # Visualizamos los resultados.
 View(tickets_global)
 View(productos_global)
@@ -317,6 +326,7 @@ View(productos_global)
 # Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
 write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
 write.csv(productos_global, "productos_global.csv", row.names = FALSE)
+
 ```
 
 
@@ -334,11 +344,82 @@ Aquellas planteadas como comunes.
 
   -   ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas? ¿Cuántas unidades de cada uno se han vendido?
 
+```{r}
+
+# No queremos contar a las bolsas de plástico y Parking por obvias razones.
+
+productos_ud_masvendidos <- productos_global %>%
+  filter(is.na(Peso)) %>%
+  filter(!Descripcion %in% c("BOLSA PLASTICO", "PARKING")) %>%
+  mutate(Descripcion = str_trim(Descripcion)) %>%
+  count(Descripcion, sort = TRUE, name = "n_apariciones") %>%
+  head(5)
+
+productos_ud_masvendidos
+
+```
+
+
   -   Si consideramos la categoría de frutas y verduras, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
+
+
+```{r}
+
+productos_fv_masvendidos_nombres <- productos_global %>%
+  filter(!is.na(Peso)) %>%
+  count(Descripcion, sort = TRUE) %>%
+  slice_head(n = 5) %>%
+  pull(Descripcion)
+
+productos_fv_masvendidos_nombres
+
+productos_fv_masvendidos <- productos_global %>%
+  filter(!is.na(Peso)) %>%
+  filter(Descripcion %in% productos_fv_masvendidos_nombres) %>%
+  group_by(Descripcion) %>%
+  summarise(Peso_total_kg = sum(Peso, na.rm = TRUE)) %>%
+  arrange(desc(Peso_total_kg))
+
+productos_fv_masvendidos
+
+```
+
 
   -   Si consideramos la categoría de pescado, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
 
+```{r}
+
+# Definimos las verduras y frutas para poder filtrar nuestro data frame.
+VERDUFRUTA <- c("PLATANO", "BANANA", "PEPINO", "BERENJENA", "KIWI VERDE", "CALABACIN VERDE", "COLIFLOR", "MANGO", "ALCACHOFA", "MANZANA GOLDEN", "AGUACATE", "PATATA", "MANDARINA", "HABAS", "TOMATE CANARIO","TOMATE PERA", "LIMON", "PIMIENTO ROJO", "POLVORON GRANEL", "BERENJENA RAYADA GR", "PIMIENTO FREIR", "MELON PIEL SAPO", "TOMATE ENSALADA", "MELOCOTON AMARILLO", "PERA CONFERENCIA", "TOMATE NEGRO", "BROCOLI", "MANZANA GRANNY")
+
+productos_p_masvendidos_nombres <- productos_global %>%
+  filter(!is.na(Peso)) %>%
+  filter(!Descripcion %in% VERDUFRUTA) %>%
+  count(Descripcion, sort = TRUE) %>%
+  slice_head(n = 5) %>%
+  pull(Descripcion)
+
+productos_p_masvendidos_nombres
+
+productos_p_masvendidos <- productos_global %>%
+  filter(!is.na(Peso)) %>%
+  filter(Descripcion %in% productos_p_masvendidos_nombres) %>%
+  group_by(Descripcion) %>%
+  summarise(Peso_total_kg = sum(Peso, na.rm = TRUE)) %>%
+  arrange(desc(Peso_total_kg))
+
+productos_p_masvendidos
+
+```
+
+
   -   Muestra mediante un gráfico de líneas cómo ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
+
+```{r}
+
+
+
+```
 
   -   ¿Cuál es la procedencia de los tickets? ¿Qué ciudad o pueblo tiene un mayor número de tickets?
 
