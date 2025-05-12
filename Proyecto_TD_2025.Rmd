@@ -697,4 +697,28 @@ print(productos_baja_demanda)
 
 ```
 
-- 
+- ¿Cual es el pescado y hortaliza (verdura o fruta) más caro?
+
+```{r}
+productos_pescado_mas_caro <- productos_global %>%
+  filter(!is.na(Tipo_peso)) %>%
+  filter(Tipo_peso == "Pescado") %>%
+  arrange(desc(P.Unit)) %>%
+  select(Descripcion, P.Unit)
+
+head(productos_pescado_mas_caro, 1)
+
+productos_verdura_mas_caro <- productos_global %>%
+  filter(!is.na(Tipo_peso)) %>%
+  filter(!Tipo_peso == "Pescado") %>%
+  arrange(desc(P.Unit)) %>%
+  select(Descripcion, P.Unit)
+
+head(productos_verdura_mas_caro, 1)
+
+
+# El pescado más caro es la quisquilla mediana con un precio de 27,9 €/kg
+# La verdura/fruta más cara es el aguacate con un precio de 5,5 €/kg
+
+```
+
