@@ -737,6 +737,31 @@ print(paste("Gasto promedio en productos de limpieza por ticket:", round(gasto_p
 ```
 
   -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
+```{r}
+# Unimos productos con sus fechas
+productos_con_fecha <- productos_global %>%
+  left_join(
+    tickets_global %>% select(factura_simplificada, fecha),
+    by = "factura_simplificada"
+  ) %>%
+  filter(!is.na(P.Unit)) %>%
+  mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"))
+
+# Calculamos el rango de precios por producto
+variacion_precios <- productos_con_fecha %>%
+  group_by(Descripcion) %>%
+  filter(n() >= 3) %>%  # Al menos 3 apariciones
+  summarise(
+    rango = max(P.Unit, na.rm = TRUE) - min(P.Unit, na.rm = TRUE)
+  ) %>%
+  arrange(desc(rango)) %>%
+  head(10)
+
+# Mostramos los productos con mayor variación de precio
+print("Productos con mayor variación de precio (rango):")
+print(variacion_precios)
+
+```
 
   -   ¿Qué marcas se repiten más en los tickets analizados?
 
