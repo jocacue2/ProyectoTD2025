@@ -474,11 +474,11 @@ Aquellas planteadas por nuestro grupo.
 
   -   ¿Hay diferencias de precios entre marcas blancas y marcas comerciales?
 
-  -   ¿Cuál es el día de la semana con mayor volumen de compras?
+  -   ¿Cuál es el día de la semana que mercadona factura más?
 
   -   ¿En qué épocas del año se consume más pescado?
   
-  -   ¿Cuál es el ticket promedio de una compra mensual?
+  -   ¿Cuál es el importe total promedio de una compra mensual dependiendo del mes?
 
   -   ¿Cuáles son los productos más frecuentes en los tickets?
 
@@ -611,7 +611,7 @@ Los datos específicos referentes a los productos del ticket se muestran en la T
 
 ##  APARTADO MARC DONATO
 
-¿Cuál es el día de la semana con mayor volumen de compras?
+- ¿Cuál es el día de la semana que mercadona factura más?
 
 ```{r}
 # Debemos de ver en que dia de la semana se .
@@ -633,7 +633,7 @@ print(tickets)
 ```
 
 
-¿En qué épocas del año se consume más pescado?
+- ¿En qué épocas del año se consume más pescado?
 
 ```{r}
 # Tenemos que calcular el mes del ticket y incluirlo en su estación correspondiente:
@@ -659,5 +659,32 @@ print(estacion_pescado)
 
 #Como podemos observar las estaciones donde mas se consume pescado son invierno y primavera.
 ```
+  -   ¿Cuál es el importe total promedio de una compra mensual dependiendo del mes?
 
+```{r}
+# Utilizaremos el data frame "meses" con algunos cambios.
+# Transformación del data frame con cálculo de importe promedio mensual
+meses <- tickets_global %>% 
+  mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"),  # Convertimos la fecha a formato Date
+         mes = month(fecha),  # Extraemos el número del mes
+         importe_total_num = as.numeric(gsub(",", ".", importe_total))) %>%  # Convertimos el importe a numérico
+  group_by(mes) %>% 
+  summarise(media_importe = mean(importe_total_num, na.rm = TRUE))  # Calculamos el promedio por mes
+
+# Convertimos la columna mes a factor con niveles explícitos para que ggplot ordene correctamente
+meses <- meses %>% 
+  mutate(mes = factor(mes, levels = 1:12, labels = c("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                                                      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")))
+
+# Generamos el gráfico de barras con ggplot
+ggplot(meses, aes(x = mes, y = media_importe, fill = mes)) + 
+  geom_bar(stat = "identity") +  # Se usa 'stat = "identity"' para indicar que los valores de Y ya están calculados
+  labs(title = "Importe promedio de compras mensuales",
+       x = "Mes",
+       y = "Importe promedio (€)") +
+  theme_minimal() +  # Se usa un tema limpio y moderno
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotamos los nombres de los meses para mejor legibilidad
+
+print(meses) # Mostramos la tabla con los valores exactos.
+```
 
