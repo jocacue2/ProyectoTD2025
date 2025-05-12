@@ -687,4 +687,24 @@ ggplot(meses, aes(x = mes, y = media_importe, fill = mes)) +
 
 print(meses) # Mostramos la tabla con los valores exactos.
 ```
+-   ¿Cuáles son los productos que Mercadona podria quitar por su baja demanda?
+
+```{r}
+# Calculamos la frecuencia de cada producto en el conjunto de datos
+productos_frecuencia <- productos_global %>%
+  group_by(Descripcion) %>%
+  summarise(frecuencia = n()) %>%
+  arrange(frecuencia)
+
+# Seleccionamos los productos con menor frecuencia (baja demanda)
+productos_baja_demanda <- productos_frecuencia %>%
+  filter(frecuencia <= quantile(frecuencia, 0.25))  # Tomamos el 25% menos comprado
+
+# Mostramos los productos con baja demanda
+print(productos_baja_demanda)
+
+# Todos estos productos se han comprado solamente una vez en total.
+
+```
+
 
