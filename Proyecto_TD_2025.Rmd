@@ -484,13 +484,77 @@ Aquellas planteadas por nuestro grupo.
 
   -   ¿Cómo varían los precios de frutas y verduras según la temporada?
 
+```{r}
+datos_completos <- productos_global %>%
+  left_join(tickets_global %>% select(factura_simplificada, fecha), 
+            by = "factura_simplificada")
+
+datos_completos %>% 
+  filter(Tipo_peso == "Verdura y Frutas") %>%
+  mutate(mes = month(dmy(fecha)),
+         temporada = case_when(
+           mes %in% 3:5 ~ "Primavera",
+           mes %in% 6:8 ~ "Verano",
+           mes %in% 9:11 ~ "Otoño",
+           TRUE ~ "Invierno"
+         )) %>%
+  ggplot(aes(x = temporada, y = P.Unit)) +
+  geom_boxplot() +
+  labs(title = "Precio frutas/verduras por temporada", 
+       x = "Temporada", 
+       y = "Precio (€/kg)")
+```
+
   -   ¿Qué categoría de productos representa el mayor gasto por ticket?
+
+```{r}
+
+productos_global %>%
+  mutate(Importe = ifelse(is.na(Importe), P.Unit, Importe)) %>%
+  group_by(factura_simplificada, Tipo_peso) %>%
+  summarise(gasto = sum(Importe)) %>%
+  group_by(Tipo_peso) %>%
+  summarise(gasto_promedio = mean(gasto)) %>%
+  ggplot(aes(x=reorder(Tipo_peso, -gasto_promedio), y=gasto_promedio)) +
+  geom_col() +
+  labs(title="Gasto promedio por categoría", x="Categoría")
+
+```
 
   -   ¿Qué marca de café prefieren los consumidores?
 
+```{r}
+
+cafes <- productos_global %>%
+  filter(str_detect(tolower(Descripcion), "café")) %>%
+  count(Descripcion, sort = TRUE)
+
+cafes
+```
+
   -   ¿Hay diferencia de precios entre el mismo producto comprado en diferentes fechas?
 
+```{r}
+
+promedio_productos <- productos_global %>%
+  group_by(factura_simplificada) %>%
+  summarise(n_productos = n()) %>%
+  summarise(media = mean(n_productos))
+
+promedio_productos
+```
+
   -   ¿Cuántos productos por ticket se compran en promedio?
+
+```{r}
+
+productos_por_ticket <- productos_global %>% 
+  group_by(factura_simplificada) %>% 
+  tally()
+
+mean(productos_por_ticket$n)
+
+```
 
   -   ¿Qué productos tienen mayor carga impositiva por IVA?
 
