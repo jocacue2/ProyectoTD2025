@@ -546,6 +546,138 @@ mean(productos_por_ticket$n)
 
 ```
 
+  - ¿Cuál es el día de la semana que Mercadona factura más?
+
+```{r}
+# Debemos de ver en que dia de la semana se .
+# Hay que convertir la fecha en dias de la semana y el importe total 
+# en numerico cambiando la coma por el punto
+
+tickets <- tickets_global %>% mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"), 
+                                     dia_semana = weekdays(fecha),
+                                     importe_total = as.numeric(gsub(",", ".", importe_total))) %>% 
+  select(dia_semana, importe_total) %>%   # Cogemos unicamente estas dos columnas, ya que las otras no son necesarias
+  group_by(dia_semana) %>%    # Agrupamos por dias de la semana para calcular el importe de cada dia.
+  summarise(total_dia = sum(importe_total, na.rm = TRUE)) %>% # Sumatorio que sume todos los importes totales por dias
+  arrange(desc(total_dia)) # Ordenamso de mayor a menor el data.frame
+
+cat("El dia de la semana donde Mercadona a recaudado más es:",tickets$dia_semana[1])
+
+# Si queremos ver la tabla de valores:
+print(tickets)
+```
+
+
+- ¿En qué épocas del año se consume más pescado?
+
+```{r}
+# Tenemos que calcular el mes del ticket y incluirlo en su estación correspondiente:
+
+meses <- tickets_global %>% 
+  mutate(mes = as.Date(fecha, format = "%d/%m/%Y"), # Convertimos en formato fecha la fecha.
+         mes = month(mes)) %>% # De fecha a mes.
+  select(mes, factura_simplificada) %>% # Seleccionamos solamente las columnas que necesitamos. 
+  mutate(estacion = ifelse(mes %in% c(12, 1, 2), "Invierno",# Columna estaciones con condiciones para separar.
+                           ifelse(mes %in% c(3:5), "Primavera",
+                                  ifelse(mes %in% c(6:8), "Verano", "Otoño")))) %>%
+  group_by(estacion) %>% # Agrupamos por estaciones
+  select(estacion, factura_simplificada) # Seleccionamos las columnas que nos interesan
+
+estacion_pescado <- inner_join(meses, productos_global, by = "factura_simplificada") %>%
+  filter(!is.na(Importe)) %>%
+  filter(Tipo_peso == "Pescado") %>%
+  group_by(estacion) %>%
+  summarise(total_pescado = n()) %>%
+  arrange(desc(total_pescado))
+
+print(estacion_pescado)
+
+#Como podemos observar las estaciones donde mas se consume pescado son invierno y primavera.
+```
+
+
+  -   ¿Cuál es el importe total promedio de una compra mensual dependiendo del mes?
+
+```{r}
+# Utilizaremos el data frame "meses" con algunos cambios.
+# Transformación del data frame con cálculo de importe promedio mensual
+meses <- tickets_global %>% 
+  mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"),  # Convertimos la fecha a formato Date
+         mes = month(fecha),  # Extraemos el número del mes
+         importe_total_num = as.numeric(gsub(",", ".", importe_total))) %>%  # Convertimos el importe a numérico
+  group_by(mes) %>% 
+  summarise(media_importe = mean(importe_total_num, na.rm = TRUE))  # Calculamos el promedio por mes
+
+# Convertimos la columna mes a factor con niveles explícitos para que ggplot ordene correctamente
+meses <- meses %>% 
+  mutate(mes = factor(mes, levels = 1:12, labels = c("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                                                      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")))
+
+# Generamos el gráfico de barras con ggplot
+ggplot(meses, aes(x = mes, y = media_importe, fill = mes)) + 
+  geom_bar(stat = "identity") +  # Se usa 'stat = "identity"' para indicar que los valores de Y ya están calculados
+  labs(title = "Importe promedio de compras mensuales",
+       x = "Mes",
+       y = "Importe promedio (€)") +
+  theme_minimal() +  # Se usa un tema limpio y moderno
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotamos los nombres de los meses para mejor legibilidad
+
+print(meses) # Mostramos la tabla con los valores exactos.
+```
+
+
+-   ¿Cuáles son los productos que Mercadona podria quitar por su baja demanda?
+
+```{r}
+# Calculamos la frecuencia de cada producto en el conjunto de datos
+productos_frecuencia <- productos_global %>%
+  group_by(Descripcion) %>%
+  summarise(frecuencia = n()) %>%
+  arrange(frecuencia)
+
+# Seleccionamos los productos con menor frecuencia (baja demanda)
+productos_baja_demanda <- productos_frecuencia %>%
+  filter(frecuencia <= quantile(frecuencia, 0.25))  # Tomamos el 25% menos comprado
+
+# Mostramos los productos con baja demanda
+print(productos_baja_demanda)
+
+# Todos estos productos se han comprado solamente una vez en total.
+
+```
+
+
+
+- ¿Cual es el pescado y hortaliza (verdura o fruta) más caro?
+
+```{r}
+# Filtramos los productos de pescado y ordenamos por precio unitario descendente
+productos_pescado_mas_caro <- productos_global %>%
+  filter(!is.na(Tipo_peso)) %>%  # Eliminamos valores NA en Tipo_peso
+  filter(Tipo_peso == "Pescado") %>%  # Filtramos solo productos que sean pescado
+  arrange(desc(P.Unit)) %>%  # Ordenamos por precio unitario de mayor a menor
+  select(Descripcion, P.Unit)  # Seleccionamos solo las columnas relevantes
+
+# Mostramos el pescado más caro
+head(productos_pescado_mas_caro, 1)  # Extraemos solo el producto más caro
+
+# Filtramos los productos de verduras y frutas (hortalizas)
+productos_verdura_mas_caro <- productos_global %>%
+  filter(!is.na(Tipo_peso)) %>%  # Eliminamos valores NA en Tipo_peso
+  filter(Tipo_peso != "Pescado") %>%  # Filtramos los productos que NO sean pescado
+  arrange(desc(P.Unit)) %>%  # Ordenamos por precio unitario de mayor a menor
+  select(Descripcion, P.Unit)  # Seleccionamos solo las columnas relevantes
+
+# Mostramos la verdura/fruta más cara
+head(productos_verdura_mas_caro, 1)  # Extraemos solo el producto más caro
+
+
+# El pescado más caro es la quisquilla mediana con un precio de 27,9 €/kg
+# La verdura/fruta más cara es el aguacate con un precio de 5,5 €/kg
+
+```
+
+
   -   ¿Qué productos tienen mayor carga impositiva por IVA?
 
   -   ¿Qué tipo de pan se compra con más frecuencia?
@@ -598,127 +730,4 @@ knitr::kable(productos_global,
 Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
 
 
-
-##  APARTADO MARC DONATO
-
-- ¿Cuál es el día de la semana que mercadona factura más?
-
-```{r}
-# Debemos de ver en que dia de la semana se .
-# Hay que convertir la fecha en dias de la semana y el importe total 
-# en numerico cambiando la coma por el punto
-
-tickets <- tickets_global %>% mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"), 
-                                     dia_semana = weekdays(fecha),
-                                     importe_total = as.numeric(gsub(",", ".", importe_total))) %>% 
-  select(dia_semana, importe_total) %>%   # Cogemos unicamente estas dos columnas, ya que las otras no son necesarias
-  group_by(dia_semana) %>%    # Agrupamos por dias de la semana para calcular el importe de cada dia.
-  summarise(total_dia = sum(importe_total, na.rm = TRUE)) %>% # Sumatorio que sume todos los importes totales por dias
-  arrange(desc(total_dia)) # Ordenamso de mayor a menor el data.frame
-
-cat("El dia de la semana donde Mercadona a recaudado más es:",tickets$dia_semana[1])
-
-# Si queremos ver la tabla de valores:
-print(tickets)
-```
-
-
-- ¿En qué épocas del año se consume más pescado?
-
-```{r}
-# Tenemos que calcular el mes del ticket y incluirlo en su estación correspondiente:
-
-meses <- tickets_global %>% 
-  mutate(mes = as.Date(fecha, format = "%d/%m/%Y"), # Convertimos en formato fecha la fecha.
-         mes = month(mes)) %>% # De fecha a mes.
-  select(mes, factura_simplificada) %>% # Seleccionamos solamente las columnas que necesitamos. 
-  mutate(estacion = ifelse(mes %in% c(12, 1, 2), "Invierno",# Columna estaciones con condiciones para separar.
-                           ifelse(mes %in% c(3:5), "Primavera",
-                                  ifelse(mes %in% c(6:8), "Verano", "Otoño")))) %>%
-  group_by(estacion) %>% # Agrupamos por estaciones
-  select(estacion, factura_simplificada) # Seleccionamos las columnas que nos interesan
-
-estacion_pescado <- inner_join(meses, productos_global, by = "factura_simplificada") %>%
-  filter(!is.na(Importe)) %>%
-  filter(Tipo_peso == "Pescado") %>%
-  group_by(estacion) %>%
-  summarise(total_pescado = n()) %>%
-  arrange(desc(total_pescado))
-
-print(estacion_pescado)
-
-#Como podemos observar las estaciones donde mas se consume pescado son invierno y primavera.
-```
-  -   ¿Cuál es el importe total promedio de una compra mensual dependiendo del mes?
-
-```{r}
-# Utilizaremos el data frame "meses" con algunos cambios.
-# Transformación del data frame con cálculo de importe promedio mensual
-meses <- tickets_global %>% 
-  mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"),  # Convertimos la fecha a formato Date
-         mes = month(fecha),  # Extraemos el número del mes
-         importe_total_num = as.numeric(gsub(",", ".", importe_total))) %>%  # Convertimos el importe a numérico
-  group_by(mes) %>% 
-  summarise(media_importe = mean(importe_total_num, na.rm = TRUE))  # Calculamos el promedio por mes
-
-# Convertimos la columna mes a factor con niveles explícitos para que ggplot ordene correctamente
-meses <- meses %>% 
-  mutate(mes = factor(mes, levels = 1:12, labels = c("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                                                      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")))
-
-# Generamos el gráfico de barras con ggplot
-ggplot(meses, aes(x = mes, y = media_importe, fill = mes)) + 
-  geom_bar(stat = "identity") +  # Se usa 'stat = "identity"' para indicar que los valores de Y ya están calculados
-  labs(title = "Importe promedio de compras mensuales",
-       x = "Mes",
-       y = "Importe promedio (€)") +
-  theme_minimal() +  # Se usa un tema limpio y moderno
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotamos los nombres de los meses para mejor legibilidad
-
-print(meses) # Mostramos la tabla con los valores exactos.
-```
--   ¿Cuáles son los productos que Mercadona podria quitar por su baja demanda?
-
-```{r}
-# Calculamos la frecuencia de cada producto en el conjunto de datos
-productos_frecuencia <- productos_global %>%
-  group_by(Descripcion) %>%
-  summarise(frecuencia = n()) %>%
-  arrange(frecuencia)
-
-# Seleccionamos los productos con menor frecuencia (baja demanda)
-productos_baja_demanda <- productos_frecuencia %>%
-  filter(frecuencia <= quantile(frecuencia, 0.25))  # Tomamos el 25% menos comprado
-
-# Mostramos los productos con baja demanda
-print(productos_baja_demanda)
-
-# Todos estos productos se han comprado solamente una vez en total.
-
-```
-
-- ¿Cual es el pescado y hortaliza (verdura o fruta) más caro?
-
-```{r}
-productos_pescado_mas_caro <- productos_global %>%
-  filter(!is.na(Tipo_peso)) %>%
-  filter(Tipo_peso == "Pescado") %>%
-  arrange(desc(P.Unit)) %>%
-  select(Descripcion, P.Unit)
-
-head(productos_pescado_mas_caro, 1)
-
-productos_verdura_mas_caro <- productos_global %>%
-  filter(!is.na(Tipo_peso)) %>%
-  filter(!Tipo_peso == "Pescado") %>%
-  arrange(desc(P.Unit)) %>%
-  select(Descripcion, P.Unit)
-
-head(productos_verdura_mas_caro, 1)
-
-
-# El pescado más caro es la quisquilla mediana con un precio de 27,9 €/kg
-# La verdura/fruta más cara es el aguacate con un precio de 5,5 €/kg
-
-```
 
