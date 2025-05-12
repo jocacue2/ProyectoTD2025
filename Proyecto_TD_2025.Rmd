@@ -563,4 +563,18 @@ print(tickets)
 ```
 
 
+¿En qué épocas del año se consume más pescado?
+
+```{r}
+# Tenemos que calcular el mes del ticket y incluirlo en su estación correspondiente:
+
+meses <- tickets_global %>% 
+  mutate(mes = as.Date(fecha, format = "%d/%m/%Y"), # Convertimos en formato fecha la fecha.
+         mes = month(mes)) %>% # Sacamos unicamente el mes.
+  select(mes, factura_simplificada)
+
+meses
+
+```
+
 
