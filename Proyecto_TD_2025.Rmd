@@ -611,7 +611,7 @@ meses <- tickets_global %>%
 # Convertimos la columna mes a factor con niveles explícitos para que ggplot ordene correctamente
 meses <- meses %>% 
   mutate(mes = factor(mes, levels = 1:12, labels = c("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                                                      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")))
+                                                      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"))) %>% arrange(desc(media_importe))
 
 # Generamos el gráfico de barras con ggplot
 ggplot(meses, aes(x = mes, y = media_importe, fill = mes)) + 
