@@ -763,7 +763,11 @@ print(variacion_precios)
 
 ```
 
-  -   ¿Qué marcas se repiten más en los tickets analizados?
+  -   ¿Cuáles son los productos más comprados en total y cuál es su gasto acumulado?
+
+```{r}
+
+```
 
   -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
 
