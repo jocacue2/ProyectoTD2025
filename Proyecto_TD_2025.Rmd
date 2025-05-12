@@ -53,6 +53,7 @@ procesar_ticket <- function(fichero) {
     P.Unit = character(), 
     Peso = character(),
     Importe = character(),
+    Tipo_peso = character(),
     factura_simplificada = character(),
     stringsAsFactors = FALSE
   )
@@ -150,6 +151,7 @@ procesar_ticket <- function(fichero) {
               P.Unit = precio_unitario,
               Peso = peso,
               Importe = NA,
+              Tipo_peso = NA,
               factura_simplificada = factura_simplificada,
               stringsAsFactors = FALSE
             )
@@ -170,6 +172,7 @@ procesar_ticket <- function(fichero) {
               P.Unit = precio_unitario,
               Peso = peso,
               Importe = NA,
+              Tipo_peso = NA,
               factura_simplificada = factura_simplificada,
               stringsAsFactors = FALSE
             )
@@ -185,6 +188,7 @@ procesar_ticket <- function(fichero) {
           if (str_detect(linea, "^[A-ZÁÉÍÓÚÜÑ]+(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)*$")) {
             descripcion <- linea
             zona_pesos <- TRUE
+            tipo <- "Pescado"
           } 
           else if (str_detect(linea, "^\\d+(?:\\.\\d+)?\\s+[A-ZÁÉÍÓÚÜÑ]+(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)*$")) {
             matches <- str_match(linea, "^(\\d+(?:\\.\\d+)?)\\s+([A-ZÁÉÍÓÚÜÑ]+(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)*)$")
@@ -192,6 +196,7 @@ procesar_ticket <- function(fichero) {
               cantidad <- as.numeric(matches[1, 2])
               descripcion <- matches[1, 3]
               zona_pesos <- TRUE
+              tipo <- "Verdura y Frutas"
             }
           }
           else if (str_detect(linea, "^([0-9]+,[0-9]+)\\s+kg\\s+([0-9]+,[0-9]+) €/kg\\s+([0-9]+,[0-9]+)$")) {
@@ -205,6 +210,7 @@ procesar_ticket <- function(fichero) {
               Peso = peso,
               P.Unit = precio_por_kg,
               Importe = importe,
+              Tipo_peso = tipo,
               factura_simplificada = factura_simplificada,
               stringsAsFactors = FALSE
             )
@@ -579,11 +585,11 @@ meses <- tickets_global %>%
   select(estacion, factura_simplificada) # Seleccionamos las columnas que nos interesan
 
 # Definimos las verduras y frutas para poder filtrar nuestro data frame.
-VERDUFRUTA <- c("PLATANO", "BANANA", "PEPINO", "BERENJENA", "KIWI VERDE", "CALABACIN VERDE", "COLIFLOR", "MANGO", "ALCACHOFA", "MANZANA GOLDEN", "AGUACATE", "PATATA", "MANDARINA", "HABAS", "TOMATE CANARIO","TOMATE PERA", "LIMON", "PIMIENTO ROJO", "POLVORON GRANEL", "BERENJENA RAYADA GR", "PIMIENTO FREIR", "MELON PIEL SAPO", "TOMATE ENSALADA", "MELOCOTON AMARILLO", "PERA CONFERENCIA", "TOMATE NEGRO", "BROCOLI", "MANZANA GRANNY")
+VERDUFRUTA <- c("PLATANO", "BANANA", "PEPINO", "BERENJENA", "KIWI VERDE", "CALABACIN VERDE", "COLIFLOR", "MANGO", "ALCACHOFA", "MANZANA GOLDEN", "AGUACATE", "PATATA", "MANDARINA", "HABAS", "TOMATE CANARIO","TOMATE PERA", "LIMON", "PIMIENTO ROJO", "POLVORON GRANEL", "BERENJENA RAYADA GR", "PIMIENTO FREIR", "MELON PIEL SAPO", "TOMATE ENSALADA", "MELOCOTON AMARILLO", "PERA CONFERENCIA", "TOMATE NEGRO", "BROCOLI", "MANZANA GRANNY", "SANDIA BAJA SEMILLAS", "")
 
 estacion_pescado <- inner_join(meses, productos_global, by = "factura_simplificada") %>%
   filter(!is.na(Importe)) %>%
-  filter()
+  filter(!Descripcion %in% VERDUFRUTA)
 
 
 ```
