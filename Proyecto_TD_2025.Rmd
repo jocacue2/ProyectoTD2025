@@ -500,14 +500,18 @@ datos_completos %>%
 ```{r}
 
 productos_global %>%
-  mutate(Importe = ifelse(is.na(Importe), P.Unit, Importe)) %>%
-  group_by(factura_simplificada, Tipo_peso) %>%
-  summarise(gasto = sum(Importe)) %>%
-  group_by(Tipo_peso) %>%
-  summarise(gasto_promedio = mean(gasto)) %>%
-  ggplot(aes(x=reorder(Tipo_peso, -gasto_promedio), y=gasto_promedio)) +
-  geom_col() +
-  labs(title="Gasto promedio por categoría", x="Categoría")
+  left_join(tickets_global %>% select(factura_simplificada), by = "factura_simplificada") %>%
+  mutate(
+    Categoria = ifelse(is.na(Tipo_peso), "Productos normales", Tipo_peso),
+    Importe = ifelse(is.na(Importe), P.Unit, Importe)
+  ) %>%
+  group_by(factura_simplificada, Categoria) %>%
+  summarise(Gasto_categoria = sum(Importe), .groups = "drop") %>%
+  group_by(Categoria) %>%
+  summarise(Promedio = mean(Gasto_categoria)) %>%  # Promedio del gasto por ticket
+  ggplot(aes(reorder(Categoria, -Promedio), Promedio)) +
+  geom_col(fill = "blue") +
+  labs(title = "Gasto PROMEDIO por ticket y categoría")
 
 ```
 
