@@ -544,6 +544,22 @@ Los datos específicos referentes a los productos del ticket se muestran en la T
 ¿Cuál es el día de la semana con mayor volumen de compras?
 
 ```{r}
+# Debemos de ver en que dia de la semana se .
+# Hay que convertir la fecha en dias de la semana y el importe total 
+# en numerico cambiando la coma por el punto
+
+tickets <- tickets_global %>% mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"), 
+                                     dia_semana = weekdays(fecha),
+                                     importe_total = as.numeric(gsub(",", ".", importe_total))) %>% 
+  select(dia_semana, importe_total) %>%   # Cogemos unicamente estas dos columnas, ya que las otras no son necesarias
+  group_by(dia_semana) %>%    # Agrupamos por dias de la semana para calcular el importe de cada dia.
+  summarise(total_dia = sum(importe_total, na.rm = TRUE)) %>% # Sumatorio que sume todos los importes totales por dias
+  arrange(desc(total_dia)) # Ordenamso de mayor a menor el data.frame
+
+
+tickets$dia_semana[1]
+
+
 
 ```
 
