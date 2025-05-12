@@ -781,6 +781,27 @@ productos_global %>%
 ```
 
   -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
+```{r, warning=FALSE}
+gasto_por_periodo <- productos_global %>%
+  left_join(tickets_global %>% select(factura_simplificada, fecha), by = "factura_simplificada") %>%
+  mutate(fecha = as.Date(fecha, format = "%d/%m/%Y")) %>%
+  mutate(tipo_periodo = case_when(
+    fecha >= as.Date("2023-12-05") & fecha < as.Date("2023-12-20") ~ "Pre-vacacional",
+    fecha >= as.Date("2023-12-20") & fecha <= as.Date("2024-01-07") ~ "Vacacional",
+    fecha > as.Date("2024-01-07") & fecha <= as.Date("2024-01-22") ~ "Post-vacacional",
+    TRUE ~ "Normal"
+  )) %>%
+  group_by(factura_simplificada, tipo_periodo) %>%
+  summarise(total_ticket = sum(P.Unit, na.rm = TRUE), .groups = "drop") %>%
+  group_by(tipo_periodo) %>%
+  summarise(
+    gasto_promedio = mean(total_ticket, na.rm = TRUE),
+    tickets = n()
+  ) %>%
+  arrange(desc(gasto_promedio))
+
+print(gasto_por_periodo)
+```
 
 Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
 
