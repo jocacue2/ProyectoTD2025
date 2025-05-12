@@ -568,7 +568,7 @@ print(tickets)
 ```
 
 
-- ¿En qué épocas del año se consume más pescado?
+- ¿En qué estaciones del año se consume más pescado?
 
 ```{r}
 # Tenemos que calcular el mes del ticket y incluirlo en su estación correspondiente:
