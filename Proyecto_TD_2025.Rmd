@@ -558,6 +558,8 @@ tickets <- tickets_global %>% mutate(fecha = as.Date(fecha, format = "%d/%m/%Y")
 
 cat("El dia de la semana donde Mercadona a recaudado más es:",tickets$dia_semana[1])
 
+# Si queremos ver la tabla de valores:
+print(tickets)
 ```
 
 
