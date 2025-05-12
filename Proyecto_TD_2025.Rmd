@@ -718,6 +718,23 @@ head(pares_frecuentes, 10)
 ```
 
   -   ¿Cuánto gasta en promedio una persona en productos de limpieza por ticket?
+```{r}
+
+# Filtramos productos de limpieza por palabras clave
+productos_limpieza <- productos_global %>%
+  filter(str_detect(tolower(Descripcion), "fregar|bayeta|multiusos|escurridor|limpieza|agua mineral|fibra|friegasuelos|basura|palo|fregona|detergente|suavizante|desinfectante"))
+
+# Sumamos el gasto por ticket para esos productos
+gasto_limpieza_por_ticket <- productos_limpieza %>%
+  group_by(factura_simplificada) %>%
+  summarise(gasto_total = sum(as.numeric(P.Unit), na.rm = TRUE))  
+
+# Calculamos el gasto promedio
+gasto_promedio_limpieza <- mean(gasto_limpieza_por_ticket$gasto_total)
+
+print(paste("Gasto promedio en productos de limpieza por ticket:", round(gasto_promedio_limpieza, 2)))
+
+```
 
   -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
 
