@@ -693,6 +693,29 @@ head(productos_verdura_mas_caro, 1)  # Extraemos solo el producto más caro
   -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
 
   -   ¿Hay productos que se compran sistemáticamente juntos (patrones de compra)?
+```{r}
+# Generar pares de productos comprados juntos
+pares_lista <- productos_global %>%
+  group_by(factura_simplificada) %>%
+  summarise(productos = list(unique(Descripcion)), .groups = "drop") %>%
+  filter(lengths(productos) >= 2) %>%
+  pull(productos)
+
+# Generar todas las combinaciones de productos por factura
+pares <- unlist(
+  lapply(pares_lista, function(x) {
+    combn(x, 2, FUN = function(par) paste(sort(par), collapse = " + "), simplify = TRUE)
+  }),
+  use.names = FALSE
+)
+
+# Contar frecuencia de cada par
+pares_frecuentes <- as.data.frame(table(pares)) %>%
+  arrange(desc(Freq))
+
+# Mostrar los pares más frecuentes
+head(pares_frecuentes, 10)
+```
 
   -   ¿Cuánto gasta en promedio una persona en productos de limpieza por ticket?
 
