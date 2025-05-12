@@ -767,6 +767,17 @@ print(variacion_precios)
 
 ```{r}
 
+productos_global %>%
+  group_by(Descripcion) %>%
+  summarise(
+    veces_comprado = n(),
+    gasto_total = sum(P.Unit, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(veces_comprado)) %>%
+  head(20)
+
+
 ```
 
   -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
