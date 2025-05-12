@@ -472,16 +472,6 @@ Aquellas planteadas por nuestro grupo.
 
   -   ¿Qué productos han subido más de precio tras los cambios en el IVA?
 
-  -   ¿Hay diferencias de precios entre marcas blancas y marcas comerciales?
-
-  -   ¿Cuál es el día de la semana que mercadona factura más?
-
-  -   ¿En qué épocas del año se consume más pescado?
-  
-  -   ¿Cuál es el importe total promedio de una compra mensual dependiendo del mes?
-
-  -   ¿Cuáles son los productos más frecuentes en los tickets?
-
   -   ¿Cómo varían los precios de frutas y verduras según la temporada?
 
 ```{r}
@@ -707,4 +697,4 @@ print(productos_baja_demanda)
 
 ```
 
-
+- 
