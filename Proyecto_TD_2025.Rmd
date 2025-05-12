@@ -536,3 +536,16 @@ knitr::kable(productos_global,
 ```
 
 Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
+
+
+
+##  APARTADO MARC DONATO
+
+¿Cuál es el día de la semana con mayor volumen de compras?
+
+```{r}
+
+```
+
+
+
