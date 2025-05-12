@@ -570,10 +570,20 @@ print(tickets)
 
 meses <- tickets_global %>% 
   mutate(mes = as.Date(fecha, format = "%d/%m/%Y"), # Convertimos en formato fecha la fecha.
-         mes = month(mes)) %>% # Sacamos unicamente el mes.
-  select(mes, factura_simplificada)
+         mes = month(mes)) %>% # De fecha a mes.
+  select(mes, factura_simplificada) %>% # Seleccionamos solamente las 
+  mutate(estacion = ifelse(mes %in% c(12, 1, 2), "Invierno", 
+                           ifelse(mes %in% c(3:5), "Primavera",
+                                  ifelse(mes %in% c(6:8), "Verano", "Otoño")))) %>%
+  group_by(estacion) %>%
+  select(estacion, factura_simplificada)
 
 meses
+  
+
+# Definimos las verduras y frutas para poder filtrar nuestro data frame.
+VERDUFRUTA <- c("PLATANO", "BANANA", "PEPINO", "BERENJENA", "KIWI VERDE", "CALABACIN VERDE", "COLIFLOR", "MANGO", "ALCACHOFA", "MANZANA GOLDEN", "AGUACATE", "PATATA", "MANDARINA", "HABAS", "TOMATE CANARIO","TOMATE PERA", "LIMON", "PIMIENTO ROJO", "POLVORON GRANEL", "BERENJENA RAYADA GR", "PIMIENTO FREIR", "MELON PIEL SAPO", "TOMATE ENSALADA", "MELOCOTON AMARILLO", "PERA CONFERENCIA", "TOMATE NEGRO", "BROCOLI", "MANZANA GRANNY")
+
 
 ```
 
