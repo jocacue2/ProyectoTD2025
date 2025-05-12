@@ -556,10 +556,7 @@ tickets <- tickets_global %>% mutate(fecha = as.Date(fecha, format = "%d/%m/%Y")
   summarise(total_dia = sum(importe_total, na.rm = TRUE)) %>% # Sumatorio que sume todos los importes totales por dias
   arrange(desc(total_dia)) # Ordenamso de mayor a menor el data.frame
 
-
-tickets$dia_semana[1]
-
-
+cat("El dia de la semana donde Mercadona a recaudado más es:",tickets$dia_semana[1])
 
 ```
 
