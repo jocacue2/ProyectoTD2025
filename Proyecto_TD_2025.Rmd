@@ -328,12 +328,8 @@ productos_global <- productos_global %>%
   )
 
 # Visualizamos los resultados.
-View(tickets_global)
-View(productos_global)
-
-# Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
-write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
-write.csv(productos_global, "productos_global.csv", row.names = FALSE)
+head(tickets_global, 10)
+head(productos_global, 10)
 
 ```
 
