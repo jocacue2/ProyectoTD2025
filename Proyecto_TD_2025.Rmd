@@ -4,8 +4,8 @@ author: José Ignacio Calatayud Cuenca, Marc Donato Merí, Manuel Giner Flores, 
   Navarro Montava, Eduardo Oltra Ramos e Isaac Ruiz Quitero
 date: "2025-03-27"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Algoritmo del proyecto.
 
-```{r}
+```{r, include=FALSE}
 
 # Cargamos las librerías necesarias.
 library(pdftools)
@@ -25,8 +25,7 @@ library(ggplot2)
 
 ```
 
-```{r}
-
+```{r, include=FALSE}
 
 # Función para procesar el contenido de un ticket PDF y extraer información útil.
 procesar_ticket <- function(fichero) {
@@ -290,7 +289,7 @@ procesar_ticket <- function(fichero) {
 
 ```
 
-```{r}
+```{r, include=FALSE}
 
 # Creamos una lista para el procesamiento de todos los tickets.
 lista_resultados <- list()
@@ -331,14 +330,6 @@ productos_global <- productos_global %>%
     Importe = as.numeric(gsub(",", ".", Importe))
   )
 
-# Visualizamos los resultados.
-#View(tickets_global)
-#View(productos_global)
-
-# Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
-write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
-write.csv(productos_global, "productos_global.csv", row.names = FALSE)
-
 ```
 
 
@@ -355,11 +346,10 @@ Mediante el código en R hemos llegado a extraer la información de los tickets 
 ## Datos del data frame general del ticket
 
 ```{r tabla-ticket}
-datos_tickets <- tickets_global %>% head(5) 
 
-#knitr::kable(datos_tickets, 
-             #caption = "Ejemplo del data frame con la iformación general referente al ticket", 
-             #booktabs = TRUE)
+knitr::kable(tickets_global, 
+             caption = "Ejemplo del data frame con la iformación general referente al ticket", 
+             booktabs = TRUE)
 
 ```
 
@@ -368,11 +358,10 @@ Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla
 ## Datos del data frame de productos del ticket
 
 ```{r tabla-productos}
-datos_productos <- productos_global %>% head(5) 
 
-#knitr::kable(productos_global, 
- #            caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
-  #           booktabs = TRUE)
+knitr::kable(productos_global, 
+             caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
+             booktabs = TRUE)
 ```
 
 Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
@@ -1233,9 +1222,13 @@ gasto_por_periodo <- productos_global %>%
 print(gasto_por_periodo)
 ```
 
-Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
+# Conclusión.
 
-En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
+A partir del análisis realizado, podemos concluir que el algoritmo desarrollado en R es capaz de extraer y estructurar de manera eficaz la información contenida en los tickets de compra en PDF de Mercadona. Esto ha permitido observar patrones relevantes en el comportamiento de los precios y el gasto.
+
+En particular, se ha identificado una variación significativa en los precios de ciertos productos a lo largo del tiempo, lo que podría estar relacionado con ajustes en el IVA y otros factores económicos. Además, se observó que el impacto del IVA no siempre se transfiere de forma uniforme al precio final, sugiriendo estrategias comerciales o subsidios específicos por producto.
+
+También se logró determinar los periodos con mayor gasto promedio por ticket, lo cual podría asociarse a fechas especiales o promociones. Finalmente, la automatización de este proceso representa una herramienta útil para estudios de consumo, facilitando análisis longitudinales que serían inviables de realizar manualmente.
 
 
 
