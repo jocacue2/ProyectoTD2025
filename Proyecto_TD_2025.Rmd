@@ -4,8 +4,8 @@ author: José Ignacio Calatayud Cuenca, Marc Donato Merí, Manuel Giner Flores, 
   Navarro Montava, Eduardo Oltra Ramos e Isaac Ruiz Quitero
 date: "2025-03-27"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -325,14 +325,10 @@ productos_global <- bind_rows(lapply(lista_resultados, function(x) x$productos))
 
 productos_global <- productos_global %>%
   mutate(
-    Peso = as.numeric(gsub(",", ".", Peso)),
-    P.Unit = as.numeric(gsub(",", ".", P.Unit)),
-    Importe = as.numeric(gsub(",", ".", Importe))
+    Peso = as.numeric(str_replace_all(",", ".", Peso)),
+    P.Unit = as.numeric(str_replace_all(",", ".", P.Unit)),
+    Importe = as.numeric(str_replace_all(",", ".", Importe))
   )
-
-# Visualizamos los resultados.
-head(tickets_global, 10)
-head(productos_global, 10)
 
 ```
 
@@ -422,20 +418,29 @@ productos_fv_masvendidos
 
 ```{r}
 
+# Nos aseguramos antes de que Peso sea numérico:
+productos_global <- productos_global %>%
+  mutate(Peso = str_replace_all(Peso, ",", ".") %>% as.numeric())
+
+# 1) Los 5 pescados más vendidos (por conteo), excluyendo otras categorías
 productos_p_masvendidos_nombres <- productos_global %>%
-  filter(!is.na(Peso), Tipo_peso == "Pescado") %>%
-  filter(!Descripcion %in% VERDUFRUTA) %>%
+  filter(
+    !is.na(Peso),
+    Tipo_peso == "Pescado"
+  ) %>%
   count(Descripcion, sort = TRUE) %>%
   slice_head(n = 5) %>%
   pull(Descripcion)
 
-productos_p_masvendidos_nombres
-
+# 2) Sumo su peso total, asegurándome de volver a filtrar pescado
 productos_p_masvendidos <- productos_global %>%
-  filter(!is.na(Peso)) %>%
-  filter(Descripcion %in% productos_p_masvendidos_nombres) %>%
+  filter(
+    !is.na(Peso),
+    Tipo_peso == "Pescado",
+    Descripcion %in% productos_p_masvendidos_nombres
+  ) %>%
   group_by(Descripcion) %>%
-  summarise(Peso_total_kg = sum(Peso, na.rm = TRUE)) %>%
+  summarise(Peso_total_kg = sum(Peso, na.rm = TRUE), .groups = "drop") %>%
   arrange(desc(Peso_total_kg))
 
 productos_p_masvendidos
@@ -822,27 +827,49 @@ productos_comprados
   
 ```{r}
 
-# Filtramos los productos ecológicos según palabras clave en la descripción
+# 1) Filtramos productos ecológicos (ó/acento y organico/orgánico)
 productos_ecologicos <- productos_global %>%
-  filter(grepl("ecológico|bio|orgánico", Descripcion, ignore.case = TRUE)) %>%
-  left_join(tickets_global, by = "archivo")  # Unimos con el ticket para obtener la fecha
+  filter(
+    grepl("ecol[óo]gico|bio|org[áa]nico", Descripcion, ignore.case = TRUE)
+  ) %>%
+  # 2) Unimos sólo la fecha del ticket (ajusta 'factura_simplificada' si tu key es otra)
+  left_join(
+    tickets_global %>% select(factura_simplificada, fecha),
+    by = "factura_simplificada"
+  ) %>%
+  filter(!is.na(fecha)) %>% 
+  # 3) Parsiado seguro de fecha
+  mutate(fecha = dmy(fecha),
+         fecha_anno_mes = format(fecha, "%Y-%m"))
 
-# Extraemos el año y mes de la fecha de compra
-productos_ecologicos <- productos_ecologicos %>%
-  mutate(fecha_anno_mes = format(as.Date(fecha), "%Y-%m"))
-
-# Contamos los productos ecológicos por mes
+# 4) Contamos por mes
 tendencia_ecologico <- productos_ecologicos %>%
   count(fecha_anno_mes) %>%
   arrange(fecha_anno_mes)
 
-# Visualizamos la tendencia (número de productos ecológicos por mes/año)
-tendencia_ecologico
+# 5) Si hay datos, gráfico:
+if(nrow(tendencia_ecologico) > 0) {
+  ggplot(tendencia_ecologico,
+         aes(x = as.Date(paste0(fecha_anno_mes, "-01")), y = n)) +
+    geom_line(size = 1) +
+    geom_point(size = 2) +
+    scale_x_date(date_breaks = "1 month", date_labels = "%Y-%m") +
+    labs(
+      title = "Tendencia mensual de compras de productos ecológicos",
+      x = "Mes",
+      y = "Número de productos ecológicos"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+} else {
+  message("No se han encontrado productos ecológicos con esas claves en Descripcion.")
+}
+
 ```
 
   -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
   
-```{r}
+```{r, eval=FALSE}
 
 # Primero, calculamos el porcentaje de IVA para cada ticket.
 ticket_con_iva <- tickets_global %>%
@@ -909,7 +936,7 @@ print(paste("Gasto promedio en productos de limpieza por ticket:", round(gasto_p
 
   -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
   
-```{r}
+```{r, eval=FALSE}
 # Unimos productos con sus fechas y filtramos datos válidos
 productos_con_fecha <- productos_global %>%
   left_join(
@@ -937,7 +964,7 @@ print(variacion_precios)
 
   -   ¿Cuáles son los productos más comprados en total y cuál es su gasto acumulado?
 
-```{r}
+```{r, eval=FALSE}
 
 # Contar cuántas veces se compró cada producto y cuánto se ha gastado en total en cada uno
 productos_global %>%
@@ -955,7 +982,7 @@ productos_global %>%
 
   -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
   
-```{r, warning=FALSE}
+```{r, eval=FALSE}
 
 # Añadir fechas a los productos y clasificar cada compra según su periodo (pre-vacacional, vacacional, etc.)
 gasto_por_periodo <- productos_global %>%
