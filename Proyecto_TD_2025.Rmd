@@ -752,10 +752,26 @@ productos_comprados <- productos_global %>%
 productos_comprados
 
 
-  -   ¿Los consumidores compran más productos frescos o envasados?
-
   -   ¿Se observa una tendencia de aumento o disminución en la compra de productos ecológicos?
+library(dplyr)
+library(lubridate)
 
+# Filtramos los productos ecológicos según palabras clave en la descripción
+productos_ecologicos <- productos_global %>%
+  filter(grepl("ecológico|bio|orgánico", Descripcion, ignore.case = TRUE)) %>%
+  left_join(tickets_global, by = "archivo")  # Unimos con el ticket para obtener la fecha
+
+# Extraemos el año y mes de la fecha de compra
+productos_ecologicos <- productos_ecologicos %>%
+  mutate(fecha_anno_mes = format(as.Date(fecha), "%Y-%m"))
+
+# Contamos los productos ecológicos por mes
+tendencia_ecologico <- productos_ecologicos %>%
+  count(fecha_anno_mes) %>%
+  arrange(fecha_anno_mes)
+
+# Visualizamos la tendencia (número de productos ecológicos por mes/año)
+tendencia_ecologico
   -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
 
   -   ¿Hay productos que se compran sistemáticamente juntos (patrones de compra)?
