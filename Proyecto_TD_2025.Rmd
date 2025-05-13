@@ -778,16 +778,21 @@ cafes <- productos_global %>%
 cafes
 ```
 
-  -   ¿Hay diferencia de precios entre el mismo producto comprado en diferentes fechas?
+  -   ¿El precio de un mismo producto cambia dependiendo del día en que se compra?
 
 ```{r}
+productos_global2 <- productos_global %>%
+  left_join(tickets_global %>% select(factura_simplificada, fecha), 
+            by = "factura_simplificada")
 
-promedio_productos <- productos_global %>%
-  group_by(factura_simplificada) %>%
-  summarise(n_productos = n()) %>%
-  summarise(media = mean(n_productos))
+# Buscamos productos con más de un precio distinto
+productos_con_precios_distintos <- productos_global2 %>%
+  filter(!is.na(P.Unit), !is.na(Descripcion)) %>%
+  group_by(Descripcion) %>%
+  summarise(num_precios_distintos = n_distinct(P.Unit)) %>%
+  filter(num_precios_distintos > 1)
 
-promedio_productos
+productos_con_precios_distintos
 ```
 
   -   ¿Cuántos productos por ticket se compran en promedio?
