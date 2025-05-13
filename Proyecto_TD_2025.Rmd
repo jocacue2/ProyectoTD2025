@@ -651,7 +651,35 @@ ggplot(head(chocolates_populares, 10),
 ```
   -   ¿Qué carne tiene mejor relación calidad-precio: la de carnicería o la envasada al vacío?
 
-  -   ¿Qué productos han subido más de precio tras los cambios en el IVA?
+-   ¿Qué productos han subido más de precio tras los cambios en el IVA?
+
+```{r}
+# Crear tabla de productos únicos (1 registro por producto)
+productos_unicos <- productos_global %>%
+  group_by(Descripcion) %>%
+  summarise(
+    P.Unit = first(P.Unit),  # Tomamos el primer precio encontrado para cada producto
+    .groups = 'drop'
+  )
+
+# Calcular precios con y sin IVA para todos los productos únicos
+resultados_completos <- productos_unicos %>%
+  mutate(
+    IVA_aplicado = 21,  # Asignamos 21% a todos
+    Precio_sin_IVA = round(P.Unit / 1.21, 2),
+    Diferencia_IVA = round(P.Unit - Precio_sin_IVA, 2)
+  ) %>%
+  arrange(desc(Diferencia_IVA)) %>%
+  select(
+    Producto = Descripcion,
+    Precio_con_IVA = P.Unit,
+    Precio_sin_IVA,
+    Diferencia_IVA,
+  )
+
+# Mostrar todos los productos ordenados por mayor diferencia de IVA
+resultados_completos
+```
 
   -   ¿Cómo varían los precios de frutas y verduras según la temporada?
 
