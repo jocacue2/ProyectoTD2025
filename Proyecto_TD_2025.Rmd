@@ -683,6 +683,47 @@ head(productos_verdura_mas_caro, 1)  # Extraemos solo el producto más caro
 
 
   -   ¿Qué productos tienen mayor carga impositiva por IVA?
+library(dplyr)
+library(stringr)
+
+# Procesamos todos los tickets y unimos productos, agregando el tipo de IVA a cada producto
+productos_global <- archivos_pdf %>%
+  lapply(function(fichero) {
+    resultado <- procesar_ticket(fichero)
+    
+    # Añadimos el tipo de IVA al data frame de productos
+    productos <- resultado$productos
+    productos$tipos_iva <- resultado$ticket$tipos_iva
+    
+    return(productos)
+  }) %>%
+  bind_rows()
+
+# Aseguramos que el campo IVA esté en un solo número (ej. 21%)
+productos_global <- productos_global %>%
+  filter(!is.na(Importe), !is.na(tipos_iva)) %>%
+  mutate(
+    # Nos quedamos con el IVA más alto del campo (por si tiene "10%, 4%, 21%")
+    max_iva = tipos_iva %>%
+      str_extract_all("\\d+%") %>%
+      sapply(function(x) max(as.numeric(str_remove(x, "%")))),
+    
+    # Convertimos Importe a número (si estaba con coma)
+    Importe = as.numeric(str_replace(Importe, ",", "."))
+  )
+
+# Agrupamos los productos por descripción y max_iva, y sumamos los importes
+productos_por_iva <- productos_global %>%
+  group_by(Descripcion, max_iva) %>%
+  summarise(
+    Total_con_IVA = sum(Importe, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(max_iva), desc(Total_con_IVA))  # Ordenamos por mayor carga impositiva y total
+
+# Mostramos los productos con mayor carga impositiva
+productos_por_iva 
+
 
   -   ¿Qué tipo de pan se compra con más frecuencia?
 
