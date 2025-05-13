@@ -726,6 +726,27 @@ productos_por_iva
 
 
   -   ¿Qué tipo de pan se compra con más frecuencia?
+# Filtramos solo productos que contengan "PAN" en su descripción (ignorando mayúsculas/minúsculas)
+pan_mas_frecuente <- productos_global %>%
+  filter(grepl("PAN", Descripcion, ignore.case = TRUE)) %>%  # Filtra productos relacionados con pan
+  count(Descripcion, sort = TRUE) %>%                        # Cuenta cada tipo de pan
+  slice_head(n = 1)                                          # Selecciona el más frecuente
+
+pan_mas_frecuente
+
+```
+  -   ¿Los consumidores compran más productos frescos o envasados?
+```{r}
+library(dplyr)
+# Filtramos solo productos que contengan "PAN" en su descripción (ignorando mayúsculas/minúsculas)
+pan_mas_frecuente <- productos_global %>%
+  filter(grepl("PAN", Descripcion, ignore.case = TRUE)) %>%  # Filtra productos relacionados con pan
+  count(Descripcion, sort = TRUE) %>%                        # Cuenta cada tipo de pan
+  slice_head(n = 1)                                          # Selecciona el más frecuente
+
+pan_mas_frecuente
+
+
 
   -   ¿Los consumidores compran más productos frescos o envasados?
 
