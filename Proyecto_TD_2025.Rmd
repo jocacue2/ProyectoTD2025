@@ -771,7 +771,7 @@ pan_mas_frecuente <- productos_global %>%
 
 pan_mas_frecuente
 
-```
+
   -   ¿Los consumidores compran más productos frescos o envasados?
 ```{r}
 library(dplyr)
