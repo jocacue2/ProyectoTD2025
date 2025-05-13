@@ -757,12 +757,10 @@ productos_por_iva <- productos_global %>%
 productos_por_iva 
 
 ```
-
-
-
-
-
   -   ¿Qué tipo de pan se compra con más frecuencia?
+
+```{r}
+
 # Filtramos solo productos que contengan "PAN" en su descripción (ignorando mayúsculas/minúsculas)
 pan_mas_frecuente <- productos_global %>%
   filter(grepl("PAN", Descripcion, ignore.case = TRUE)) %>%  # Filtra productos relacionados con pan
@@ -771,10 +769,11 @@ pan_mas_frecuente <- productos_global %>%
 
 pan_mas_frecuente
 
+```
 
   -   ¿Los consumidores compran más productos frescos o envasados?
+  
 ```{r}
-library(dplyr)
 
 # Contamos los productos frescos y envasados según la descripción
 productos_comprados <- productos_global %>%
@@ -788,10 +787,11 @@ productos_comprados <- productos_global %>%
 
 productos_comprados
 
+```
 
   -   ¿Se observa una tendencia de aumento o disminución en la compra de productos ecológicos?
-library(dplyr)
-library(lubridate)
+  
+```{r}
 
 # Filtramos los productos ecológicos según palabras clave en la descripción
 productos_ecologicos <- productos_global %>%
@@ -809,8 +809,11 @@ tendencia_ecologico <- productos_ecologicos %>%
 
 # Visualizamos la tendencia (número de productos ecológicos por mes/año)
 tendencia_ecologico
+```
+
   -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
-library(dplyr)
+  
+```{r}
 
 # Primero, calculamos el porcentaje de IVA para cada ticket.
 ticket_con_iva <- tickets_global %>%
@@ -825,9 +828,12 @@ porcentaje_iva_promedio <- ticket_con_iva %>%
   summarise(porcentaje_promedio = mean(porcentaje_iva, na.rm = TRUE))
 
 porcentaje_iva_promedio
+
 ```
 
+
   -   ¿Hay productos que se compran sistemáticamente juntos (patrones de compra)?
+  
 ```{r}
 # Generar pares de productos comprados juntos
 pares_lista <- productos_global %>%
@@ -853,6 +859,7 @@ head(pares_frecuentes, 10)
 ```
 
   -   ¿Cuánto gasta en promedio una persona en productos de limpieza por ticket?
+  
 ```{r}
 
 # Filtramos productos de limpieza por palabras clave
@@ -872,6 +879,7 @@ print(paste("Gasto promedio en productos de limpieza por ticket:", round(gasto_p
 ```
 
   -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
+  
 ```{r}
 # Unimos productos con sus fechas y filtramos datos válidos
 productos_con_fecha <- productos_global %>%
@@ -917,6 +925,7 @@ productos_global %>%
 ```
 
   -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
+  
 ```{r, warning=FALSE}
 
 # Añadir fechas a los productos y clasificar cada compra según su periodo (pre-vacacional, vacacional, etc.)
@@ -956,9 +965,7 @@ datos_tickets <- tickets_global %>% head(5)
 knitr::kable(datos_tickets, 
              caption = "Ejemplo del data frame con la iformación general referente al ticket", 
              booktabs = TRUE)
-# Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
-write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
-write.csv(productos_global, "productos_global.csv", row.names = FALSE)
+
 ```
 
 Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla-autos).
