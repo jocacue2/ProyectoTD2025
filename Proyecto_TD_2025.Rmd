@@ -370,7 +370,7 @@ productos_ud_masvendidos
 ```{r}
 
 productos_fv_masvendidos_nombres <- productos_global %>%
-  filter(!is.na(Peso)) %>%
+  filter(!is.na(Peso) & Tipo_peso == "Verdura y Frutas") %>%
   count(Descripcion, sort = TRUE) %>%
   slice_head(n = 5) %>%
   pull(Descripcion)
@@ -387,17 +387,12 @@ productos_fv_masvendidos <- productos_global %>%
 productos_fv_masvendidos
 
 ```
-
-
   -   Si consideramos la categoría de pescado, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
 
 ```{r}
 
-# Definimos las verduras y frutas para poder filtrar nuestro data frame.
-VERDUFRUTA <- c("PLATANO", "BANANA", "PEPINO", "BERENJENA", "KIWI VERDE", "CALABACIN VERDE", "COLIFLOR", "MANGO", "ALCACHOFA", "MANZANA GOLDEN", "AGUACATE", "PATATA", "MANDARINA", "HABAS", "TOMATE CANARIO","TOMATE PERA", "LIMON", "PIMIENTO ROJO", "POLVORON GRANEL", "BERENJENA RAYADA GR", "PIMIENTO FREIR", "MELON PIEL SAPO", "TOMATE ENSALADA", "MELOCOTON AMARILLO", "PERA CONFERENCIA", "TOMATE NEGRO", "BROCOLI", "MANZANA GRANNY")
-
 productos_p_masvendidos_nombres <- productos_global %>%
-  filter(!is.na(Peso)) %>%
+  filter(!is.na(Peso) & Tipo_peso == "Pescado") %>%
   filter(!Descripcion %in% VERDUFRUTA) %>%
   count(Descripcion, sort = TRUE) %>%
   slice_head(n = 5) %>%
@@ -415,7 +410,6 @@ productos_p_masvendidos <- productos_global %>%
 productos_p_masvendidos
 
 ```
-
 
   -   Muestra mediante un gráfico de líneas cómo ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
 
