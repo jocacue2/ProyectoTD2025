@@ -25,7 +25,7 @@ library(ggplot2)
 
 ```
 
-```{r, include=FALSE}
+```{r, echo=FALSE}
 
 # Función para procesar el contenido de un ticket PDF y extraer información útil.
 procesar_ticket <- function(fichero) {
@@ -289,7 +289,7 @@ procesar_ticket <- function(fichero) {
 
 ```
 
-```{r, include=FALSE}
+```{r, echo=FALSE}
 
 # Creamos una lista para el procesamiento de todos los tickets.
 lista_resultados <- list()
@@ -347,7 +347,7 @@ Mediante el código en R hemos llegado a extraer la información de los tickets 
 
 ```{r tabla-ticket}
 
-knitr::kable(tickets_global, 
+knitr::kable(head(tickets_global,5), 
              caption = "Ejemplo del data frame con la iformación general referente al ticket", 
              booktabs = TRUE)
 
@@ -359,7 +359,7 @@ Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla
 
 ```{r tabla-productos}
 
-knitr::kable(productos_global, 
+knitr::kable(head(productos_global,5), 
              caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
              booktabs = TRUE)
 ```
