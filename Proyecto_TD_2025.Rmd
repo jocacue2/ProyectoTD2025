@@ -27,6 +27,7 @@ library(ggplot2)
 
 ```{r}
 
+
 # Función para procesar el contenido de un ticket PDF y extraer información útil.
 procesar_ticket <- function(fichero) {
   # Extraemos texto del PDF.
@@ -325,10 +326,18 @@ productos_global <- bind_rows(lapply(lista_resultados, function(x) x$productos))
 
 productos_global <- productos_global %>%
   mutate(
-    Peso = as.numeric(str_replace_all(",", ".", Peso)),
-    P.Unit = as.numeric(str_replace_all(",", ".", P.Unit)),
-    Importe = as.numeric(str_replace_all(",", ".", Importe))
+    Peso = as.numeric(gsub(",", ".", Peso)),
+    P.Unit = as.numeric(gsub(",", ".", P.Unit)),
+    Importe = as.numeric(gsub(",", ".", Importe))
   )
+
+# Visualizamos los resultados.
+#View(tickets_global)
+#View(productos_global)
+
+# Guardamos los resultados en un CSV, por si debemos de exportarlos en algún momento.
+write.csv(tickets_global, "tickets_global.csv", row.names = FALSE)
+write.csv(productos_global, "productos_global.csv", row.names = FALSE)
 
 ```
 
