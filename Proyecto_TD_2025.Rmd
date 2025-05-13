@@ -580,8 +580,40 @@ ggplot(precio_promedio, aes(x = mes, y = Precio_Promedio, color = Producto)) +
   scale_x_date(date_labels = "%b %Y", date_breaks = "1 month")
 
 ```
-  -   ¿Qué marca de leche es la más económica en Mercadona?
+-   ¿Qué marca de lacteos es la más económica en Mercadona?
 
+```{r}
+# Filtrar productos de leche
+productos_leche <- c("LECHE", "LÁCTEO", "YOGUR", "CREMA", "LECHE ENTERA", "LECHE SEMI-ENTERA", "YOGURT")
+
+productos_de_leche <- productos_global %>%
+  filter(str_detect(toupper(Descripcion), paste(productos_leche, collapse = "|"))) %>%
+  mutate(
+    Marca = str_extract(Descripcion, "[A-Za-zÁÉÍÓÚÑáéíóúñ\\s]+")  # Extraer la marca del nombre del producto
+  )
+
+# Agrupar por marca y producto, luego calcular el precio máximo, mínimo y medio
+leche_por_marca <- productos_de_leche %>%
+  group_by(Marca, Descripcion) %>% 
+  summarise(
+    Precio_Maximo = max(P.Unit, na.rm = TRUE),  # Precio más alto del producto
+    Precio_Minimo = min(P.Unit, na.rm = TRUE),  # Precio más bajo del producto
+    Precio_Medio = mean(c(Precio_Maximo, Precio_Minimo), na.rm = TRUE),  # Precio medio entre el máximo y el mínimo
+    .groups = "drop"
+  ) %>%
+  group_by(Marca) %>%
+  summarise(
+    Precio_Maximo_Marca = max(Precio_Maximo, na.rm = TRUE),  # Máximo precio de cualquier producto de la marca
+    Precio_Minimo_Marca = min(Precio_Minimo, na.rm = TRUE),  # Mínimo precio de cualquier producto de la marca
+    Precio_Medio_Marca = mean(Precio_Medio, na.rm = TRUE),  # Precio medio entre los productos de la marca
+    .groups = "drop"
+  ) %>%
+  arrange(Precio_Medio_Marca)  # Ordenamos por el precio medio de cada marca
+
+# Mostrar la tabla resultante
+leche_por_marca
+
+```
   -   ¿Cuál es el chocolate más comprado por los consumidores?
 
   -   ¿Qué carne tiene mejor relación calidad-precio: la de carnicería o la envasada al vacío?
