@@ -649,8 +649,42 @@ ggplot(head(chocolates_populares, 10),
   theme_minimal() +
   theme(axis.text.y = element_text(size = 8))
 ```
-  -   ¿Qué carne tiene mejor relación calidad-precio: la de carnicería o la envasada al vacío?
+-   ¿Qué tipo de carne (ternera, cerdo, pollo o pavo) ofrece mejor relación calidad-precio según la frecuencia de compra y el precio promedio?
 
+```{r}
+# Análisis de relación calidad-precio por tipo de carne
+relacion_calidad_precio <- productos_global %>%
+  # Filtrar productos cárnicos principales
+  filter(str_detect(toupper(Descripcion), "TERNERA|CERDO|POLLO|PAVO|VACUNO")) %>%
+  mutate(
+    # Clasificar por tipo de carne
+    tipo_carne = case_when(
+      str_detect(toupper(Descripcion), "TERNERA|VACUNO") ~ "Ternera",
+      str_detect(toupper(Descripcion), "CERDO") ~ "Cerdo",
+      str_detect(toupper(Descripcion), "POLLO") ~ "Pollo",
+      str_detect(toupper(Descripcion), "PAVO") ~ "Pavo",
+      TRUE ~ "Otro"
+    ),
+    P.Unit = as.numeric(P.Unit)
+  ) %>%
+  group_by(tipo_carne) %>%
+  summarise(
+    Precio_Promedio = mean(P.Unit, na.rm = TRUE),
+    Frecuencia_Compra = n(),
+    Relacion_Calidad_Precio = Frecuencia_Compra / Precio_Promedio
+  ) %>%
+  arrange(desc(Relacion_Calidad_Precio))
+
+# Visualización
+ggplot(relacion_calidad_precio, aes(x = reorder(tipo_carne, Relacion_Calidad_Precio), y = Relacion_Calidad_Precio)) +
+  geom_bar(stat = "identity", fill = "#8B0000") +
+  labs(title = "Relación Calidad-Precio por Tipo de Carne",
+       subtitle = "Mayor valor indica mejor relación frecuencia de compra/precio",
+       x = "Tipo de Carne",
+       y = "Índice Relación Calidad-Precio") +
+  theme_minimal() +
+  coord_flip()
+```
 -   ¿Qué productos han subido más de precio tras los cambios en el IVA?
 
 ```{r}
