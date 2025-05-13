@@ -614,8 +614,41 @@ leche_por_marca <- productos_de_leche %>%
 leche_por_marca
 
 ```
-  -   ¿Cuál es el chocolate más comprado por los consumidores?
+-   ¿Cuál es el chocolate más comprado por los consumidores?
 
+```{r}
+# Primero identificamos los productos de chocolate en la lista
+productos_chocolate <- productos_global %>%
+  filter(str_detect(toupper(Descripcion), 
+         "CHOCO|CHOCOLATE|CACAO|COBERTURA|TABLETA")) %>%
+  mutate(Descripcion = str_trim(Descripcion))
+
+# Ahora contamos las compras por tipo de chocolate
+chocolates_populares <- productos_chocolate %>%
+  group_by(Producto = Descripcion) %>%
+  summarise(
+    Veces_Comprado = n(),
+    Cantidad_Total = sum(as.numeric(Peso), na.rm = TRUE),
+    Precio_Promedio = mean(as.numeric(P.Unit), na.rm = TRUE)
+  ) %>%
+  arrange(desc(Veces_Comprado))
+
+# Mostrar los 10 chocolates más comprados
+head(chocolates_populares, 10)
+
+# Gráfico de barras de los chocolates más comprados
+ggplot(head(chocolates_populares, 10), 
+       aes(x = reorder(Producto, Veces_Comprado), y = Veces_Comprado)) +
+  geom_bar(stat = "identity", fill = "#8B4513") +
+  coord_flip() +
+  labs(
+    title = "Los 10 Chocolates Más Comprados",
+    x = "Producto",
+    y = "Número de veces comprado"
+  ) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 8))
+```
   -   ¿Qué carne tiene mejor relación calidad-precio: la de carnicería o la envasada al vacío?
 
   -   ¿Qué productos han subido más de precio tras los cambios en el IVA?
