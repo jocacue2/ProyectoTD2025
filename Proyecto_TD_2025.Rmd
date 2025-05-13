@@ -1122,7 +1122,7 @@ print(paste("Gasto promedio en productos de limpieza por ticket:", round(gasto_p
 
   -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
   
-```{r, eval=FALSE}
+```{r}
 # Unimos productos con sus fechas y filtramos datos válidos
 productos_con_fecha <- productos_global %>%
   left_join(
@@ -1150,7 +1150,7 @@ print(variacion_precios)
 
   -   ¿Cuáles son los productos más comprados en total y cuál es su gasto acumulado?
 
-```{r, eval=FALSE}
+```{r}
 
 # Contar cuántas veces se compró cada producto y cuánto se ha gastado en total en cada uno
 productos_global %>%
@@ -1168,7 +1168,7 @@ productos_global %>%
 
   -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
   
-```{r, eval=FALSE}
+```{r}
 
 # Añadir fechas a los productos y clasificar cada compra según su periodo (pre-vacacional, vacacional, etc.)
 gasto_por_periodo <- productos_global %>%
