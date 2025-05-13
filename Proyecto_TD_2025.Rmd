@@ -345,9 +345,36 @@ La importancia de este proyecto radica en la posibilidad de automatizar el proce
 
 El enfoque del proyecto se basa en la creación de un algoritmo eficiente que sea capaz de leer, interpretar y extraer información clave de los tickets, tales como: fecha de la compra, productos adquiridos, cantidades, precios y, especialmente, el impacto de factores como el IVA en el precio final de los productos. Este análisis podría proporcionar valiosas perspectivas sobre cómo ha afectado la evolución del IVA a los precios de productos específicos, lo que permitiría realizar comparativas a lo largo del tiempo.
 
-De este modo, será posible responder a preguntas clave relacionadas con la evolución de precios, las preferencias de consumo y los patrones de compra, tales como:
+Mediante el código en R hemos llegado a extraer la información de los tickets y hemos obtnido dos data frame tales que:
 
-Aquellas planteadas como comunes.
+## Datos del data frame general del ticket
+
+```{r tabla-ticket}
+datos_tickets <- tickets_global %>% head(5) 
+
+knitr::kable(datos_tickets, 
+             caption = "Ejemplo del data frame con la iformación general referente al ticket", 
+             booktabs = TRUE)
+
+```
+
+Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla-autos).
+
+## Datos del data frame de productos del ticket
+
+```{r tabla-productos}
+datos_productos <- productos_global %>% head(5) 
+
+knitr::kable(productos_global, 
+             caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
+             booktabs = TRUE)
+```
+
+Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
+
+De este modo, será posible responder a preguntas clave relacionadas con la evolución de precios, las preferencias de consumo y los patrones de compra:
+
+Empezamos resolviendo aquellas planteadas como comunes.
 
   -   ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas? ¿Cuántas unidades de cada uno se han vendido?
 
@@ -390,6 +417,7 @@ productos_fv_masvendidos <- productos_global %>%
 productos_fv_masvendidos
 
 ```
+  
   -   Si consideramos la categoría de pescado, ¿cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
 
 ```{r}
@@ -470,6 +498,7 @@ tickets_global %>%
   head(10)
 
 ```
+
 Como podemos observar Valencia es la ciudad con más tickets.
 
   -   Muestra mediante un diagrama el número de tickets recogidos cada día de la semana. ¿Si tuvieses que cerrar un día entre semana, qué día lo harías?
@@ -956,31 +985,4 @@ print(gasto_por_periodo)
 Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
 
 En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
-
-## Datos del data frame general del ticket
-
-```{r tabla-ticket}
-datos_tickets <- tickets_global %>% head(5) 
-
-knitr::kable(datos_tickets, 
-             caption = "Ejemplo del data frame con la iformación general referente al ticket", 
-             booktabs = TRUE)
-
-```
-
-Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla-autos).
-
-## Datos del data frame de productos del ticket
-
-```{r tabla-productos}
-datos_productos <- productos_global %>% head(5) 
-
-knitr::kable(productos_global, 
-             caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
-             booktabs = TRUE)
-```
-
-Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
-
-
 
