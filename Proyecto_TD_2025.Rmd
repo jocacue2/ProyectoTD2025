@@ -528,8 +528,58 @@ ggplot(tickets_semana, aes(x = dia_semana, y = tickets)) +
   
 Aquellas planteadas por nuestro grupo.
 
-  -   ¿Cuánto ha subido el precio de la carne en el último año?
+-   ¿Cuánto ha subido el precio de la carne en el último año?
 
+```{r}
+# Filtrar productos cárnicos (ejemplos representativos)
+productos_carne <- c("FILETE DE TERNERA", "SOLOMILLO DE CERDO", "POLLO ENTERO", "LOMO DE CERDO", 
+                    "CHULETAS DE CERDO", "CARNE PICADA", "HAMBURGUESAS DE TERNERA")
+
+# Obtener datos de productos cárnicos
+carne_data <- productos_global %>%
+  filter(str_detect(toupper(Descripcion), paste(productos_carne, collapse = "|"))) %>%
+  left_join(tickets_global, by = "factura_simplificada") %>%
+  mutate(
+    fecha = as.Date(fecha, format = "%d/%m/%Y"),
+    P.Unit = as.numeric(P.Unit),
+    mes = floor_date(fecha, "month")
+  ) %>%
+  filter(fecha >= Sys.Date() - years(1))  # Último año
+
+# Calcular variación de precios
+precio_promedio <- carne_data %>%
+  group_by(mes, Producto = Descripcion) %>%
+  summarise(Precio_Promedio = mean(P.Unit, na.rm = TRUE), .groups = "drop") %>%
+  arrange(Producto, mes)
+
+# Calcular porcentaje de cambio
+variacion <- precio_promedio %>%
+  group_by(Producto) %>%
+  summarise(
+    Precio_Inicial = first(Precio_Promedio),
+    Precio_Final = last(Precio_Promedio),
+    Variacion_Porcentual = (Precio_Final - Precio_Inicial) / Precio_Inicial * 100
+  )
+
+# Mostrar resultados
+variacion %>% arrange(desc(Variacion_Porcentual))
+
+# Crear gráfico de evolución
+ggplot(precio_promedio, aes(x = mes, y = Precio_Promedio, color = Producto)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Evolución del Precio de Productos Cárnicos en el Último Año",
+    x = "Mes",
+    y = "Precio Promedio (€/kg)",
+    color = "Producto"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  scale_y_continuous(labels = scales::dollar_format(prefix = "", suffix = "€")) +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month")
+
+```
   -   ¿Qué marca de leche es la más económica en Mercadona?
 
   -   ¿Cuál es el chocolate más comprado por los consumidores?
