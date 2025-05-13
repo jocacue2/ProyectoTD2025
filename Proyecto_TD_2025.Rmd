@@ -796,8 +796,8 @@ porcentaje_iva_promedio
 pares_lista <- productos_global %>%
   group_by(factura_simplificada) %>%
   summarise(productos = list(unique(Descripcion)), .groups = "drop") %>%
-  filter(lengths(productos) >= 2) %>%
-  pull(productos)
+  filter(lengths(productos) >= 2) %>% # Filtrar tickets con al menos 2 productos
+  pull(productos) # Extraer solo la lista de productos
 
 # Generar todas las combinaciones de productos por factura
 pares <- unlist(
@@ -836,7 +836,7 @@ print(paste("Gasto promedio en productos de limpieza por ticket:", round(gasto_p
 
   -   ¿Qué producto ha tenido más variación de precio a lo largo del tiempo?
 ```{r}
-# Unimos productos con sus fechas
+# Unimos productos con sus fechas y filtramos datos válidos
 productos_con_fecha <- productos_global %>%
   left_join(
     tickets_global %>% select(factura_simplificada, fecha),
@@ -845,7 +845,7 @@ productos_con_fecha <- productos_global %>%
   filter(!is.na(P.Unit)) %>%
   mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"))
 
-# Calculamos el rango de precios por producto
+# Calculamos el rango de precios por producto, solo si aparece al menos 3 veces
 variacion_precios <- productos_con_fecha %>%
   group_by(Descripcion) %>%
   filter(n() >= 3) %>%  # Al menos 3 apariciones
@@ -865,6 +865,7 @@ print(variacion_precios)
 
 ```{r}
 
+# Contar cuántas veces se compró cada producto y cuánto se ha gastado en total en cada uno
 productos_global %>%
   group_by(Descripcion) %>%
   summarise(
@@ -873,13 +874,15 @@ productos_global %>%
     .groups = "drop"
   ) %>%
   arrange(desc(veces_comprado)) %>%
-  head(20)
+  head(20) # Mostrar los 20 más comprados
 
 
 ```
 
   -   ¿Se puede detectar algún cambio en los hábitos de consumo antes y después de periodos vacacionales?
 ```{r, warning=FALSE}
+
+# Añadir fechas a los productos y clasificar cada compra según su periodo (pre-vacacional, vacacional, etc.)
 gasto_por_periodo <- productos_global %>%
   left_join(tickets_global %>% select(factura_simplificada, fecha), by = "factura_simplificada") %>%
   mutate(fecha = as.Date(fecha, format = "%d/%m/%Y")) %>%
@@ -889,8 +892,11 @@ gasto_por_periodo <- productos_global %>%
     fecha > as.Date("2024-01-07") & fecha <= as.Date("2024-01-22") ~ "Post-vacacional",
     TRUE ~ "Normal"
   )) %>%
+  
+# Calcular el gasto total por ticket y clasificarlo por tipo de periodo
   group_by(factura_simplificada, tipo_periodo) %>%
   summarise(total_ticket = sum(P.Unit, na.rm = TRUE), .groups = "drop") %>%
+# Calcular el gasto promedio por tipo de periodo
   group_by(tipo_periodo) %>%
   summarise(
     gasto_promedio = mean(total_ticket, na.rm = TRUE),
