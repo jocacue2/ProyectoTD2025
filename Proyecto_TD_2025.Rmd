@@ -788,7 +788,7 @@ porcentaje_iva_promedio <- ticket_con_iva %>%
   summarise(porcentaje_promedio = mean(porcentaje_iva, na.rm = TRUE))
 
 porcentaje_iva_promedio
-
+```
 
   -   ¿Hay productos que se compran sistemáticamente juntos (patrones de compra)?
 ```{r}
