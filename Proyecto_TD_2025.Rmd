@@ -357,9 +357,9 @@ Mediante el código en R hemos llegado a extraer la información de los tickets 
 ```{r tabla-ticket}
 datos_tickets <- tickets_global %>% head(5) 
 
-knitr::kable(datos_tickets, 
-             caption = "Ejemplo del data frame con la iformación general referente al ticket", 
-             booktabs = TRUE)
+#knitr::kable(datos_tickets, 
+             #caption = "Ejemplo del data frame con la iformación general referente al ticket", 
+             #booktabs = TRUE)
 
 ```
 
@@ -370,9 +370,9 @@ Los datos generales referentes al ticket se muestran en la Tabla \@ref(tab:tabla
 ```{r tabla-productos}
 datos_productos <- productos_global %>% head(5) 
 
-knitr::kable(productos_global, 
-             caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
-             booktabs = TRUE)
+#knitr::kable(productos_global, 
+ #            caption = "Ejemplo del data frame con la iformación de los productos del ticket", 
+  #           booktabs = TRUE)
 ```
 
 Los datos específicos referentes a los productos del ticket se muestran en la Tabla \@ref(tab:tabla-autos).
@@ -938,44 +938,33 @@ head(productos_verdura_mas_caro, 1)  # Extraemos solo el producto más caro
 
 ```{r}
 
-# Procesamos todos los tickets y unimos productos, agregando el tipo de IVA a cada producto
-productos_global <- archivos_pdf %>%
-  lapply(function(fichero) {
-    resultado <- procesar_ticket(fichero)
-    
-    # Añadimos el tipo de IVA al data frame de productos
-    productos <- resultado$productos
-    productos$tipos_iva <- resultado$ticket$tipos_iva
-    
-    return(productos)
-  }) %>%
-  bind_rows()
+# NOTA: En este contexto, "tipos_iva" se encuentra en el data frame 'ticket_global'.
+# Por ello, unimos 'productos_global' con 'ticket_global' usando la columna 'factura_simplificada'
+# para incorporar la información del IVA a cada producto.
 
-# Aseguramos que el campo IVA esté en un solo número (ej. 21%)
-productos_global <- productos_global %>%
+productos_iva <- productos_global %>%
+  left_join(tickets_global %>% select(factura_simplificada, tipos_iva), 
+            by = "factura_simplificada") %>%
   filter(!is.na(Importe), !is.na(tipos_iva)) %>%
   mutate(
-    # Nos quedamos con el IVA más alto del campo (por si tiene "10%, 4%, 21%")
+    # Extraemos el mayor valor de IVA del campo "tipos_iva"
+    # Se usa str_extract_all para conseguir todos los porcentajes y luego se calcula el máximo.
     max_iva = tipos_iva %>%
       str_extract_all("\\d+%") %>%
       sapply(function(x) max(as.numeric(str_remove(x, "%")))),
-    
-    # Convertimos Importe a número (si estaba con coma)
+    # Convertimos el campo "Importe" a número, reemplazando la coma decimal por punto
     Importe = as.numeric(str_replace(Importe, ",", "."))
   )
 
-# Agrupamos los productos por descripción y max_iva, y sumamos los importes
-productos_por_iva <- productos_global %>%
+# Agrupamos por "Descripcion" y "max_iva", sumamos el importe total en cada grupo
+# y ordenamos, primero, por el IVA en forma descendente y luego por el importe total.
+productos_por_iva <- productos_iva %>%
   group_by(Descripcion, max_iva) %>%
-  summarise(
-    Total_con_IVA = sum(Importe, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(desc(max_iva), desc(Total_con_IVA))  # Ordenamos por mayor carga impositiva y total
+  summarise(Total_con_IVA = sum(Importe, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(max_iva), desc(Total_con_IVA))
 
-# Mostramos los productos con mayor carga impositiva
-productos_por_iva 
-
+# Mostramos el resultado final: los productos con mayor carga impositiva por IVA.
+productos_por_iva
 ```
   -   ¿Qué tipo de pan se compra con más frecuencia?
 
@@ -1055,20 +1044,31 @@ if(nrow(tendencia_ecologico) > 0) {
 
   -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
   
-```{r, eval=FALSE}
+```{r}
 
-# Primero, calculamos el porcentaje de IVA para cada ticket.
+# Calculamos, para cada ticket, el porcentaje de IVA que representa parte del total.
 ticket_con_iva <- tickets_global %>%
-  left_join(productos_global, by = "archivo") %>%
   mutate(
-    iva_total = ifelse(!is.na(tipos_iva), as.numeric(gsub(",", ".", tipos_iva)), 0),  # Convertimos tipos_iva en valores numéricos
-    porcentaje_iva = (iva_total / importe_total) * 100  # Calculamos el porcentaje del IVA
+    # Convertimos el importe total de carácter a número, reemplazando la coma decimal por punto.
+    importe_total_num = as.numeric(gsub(",", ".", importe_total)),
+    
+    # Extraemos todos los porcentajes de IVA (ej. "10%", "21%") y nos quedamos con el valor máximo,
+    # en caso de existir varios en un mismo ticket.
+    max_iva = sapply(str_extract_all(tipos_iva, "\\d+%"), function(x) {
+      # Convertimos cada valor (eliminando el símbolo "%") a número y seleccionamos el máximo.
+      max(as.numeric(str_remove(x, "%")), na.rm = TRUE)
+    }),
+    
+    # Calculamos el porcentaje del total que corresponde al IVA.
+    # Si un ticket tiene tasa R, entonces, el IVA incluido en el total es R/(100+R)*100.
+    porcentaje_iva = (max_iva / (100 + max_iva)) * 100
   )
 
 # Calculamos el porcentaje promedio de IVA para todos los tickets.
 porcentaje_iva_promedio <- ticket_con_iva %>%
   summarise(porcentaje_promedio = mean(porcentaje_iva, na.rm = TRUE))
 
+# Mostramos el resultado
 porcentaje_iva_promedio
 
 ```
