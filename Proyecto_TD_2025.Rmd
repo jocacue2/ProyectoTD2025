@@ -737,15 +737,19 @@ pan_mas_frecuente
 ```
   -   ¿Los consumidores compran más productos frescos o envasados?
 ```{r}
-library(dplyr)
-# Filtramos solo productos que contengan "PAN" en su descripción (ignorando mayúsculas/minúsculas)
-pan_mas_frecuente <- productos_global %>%
-  filter(grepl("PAN", Descripcion, ignore.case = TRUE)) %>%  # Filtra productos relacionados con pan
-  count(Descripcion, sort = TRUE) %>%                        # Cuenta cada tipo de pan
-  slice_head(n = 1)                                          # Selecciona el más frecuente
+ibrary(dplyr)
 
-pan_mas_frecuente
+# Contamos los productos frescos y envasados según la descripción
+productos_comprados <- productos_global %>%
+  mutate(tipo_producto = case_when(
+    grepl("fresco", Descripcion, ignore.case = TRUE) ~ "Fresco",
+    grepl("envasado", Descripcion, ignore.case = TRUE) ~ "Envasado",
+    TRUE ~ "Otro"
+  )) %>%
+  count(tipo_producto) %>%  # Contamos cada tipo
+  filter(tipo_producto != "Otro")  # Filtramos los casos que no sean Fresco ni Envasado
 
+productos_comprados
 
 
   -   ¿Los consumidores compran más productos frescos o envasados?
