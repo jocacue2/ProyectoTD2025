@@ -385,13 +385,16 @@ Empezamos resolviendo aquellas planteadas como comunes.
 
 ```{r}
 
-# No queremos contar a las bolsas de plástico y Parking por obvias razones.
-
 productos_ud_masvendidos <- productos_global %>%
+  # Filtramos aquellos que no tienen peso, buscamos únicamente los que van por unidades.
   filter(is.na(Peso)) %>%
+  # No queremos contar a las bolsas de plástico y Parking por obvias razones.
   filter(!Descripcion %in% c("BOLSA PLASTICO", "PARKING")) %>%
+  # Le quitamos los espacios en blanco al principio y al final de cada cadena de Descripcion.
   mutate(Descripcion = str_trim(Descripcion)) %>%
+  # En una nueva columnas llamada como n_apariciones contamos cuántas veces aparece cada descripción y ordenamos de mayor a menor.
   count(Descripcion, sort = TRUE, name = "n_apariciones") %>%
+  # Mostramos las 5 primeras.
   head(5)
 
 productos_ud_masvendidos
@@ -404,19 +407,31 @@ productos_ud_masvendidos
 
 ```{r}
 
+# Obtenemos los nombres de los 5 productos más vendidos.
 productos_fv_masvendidos_nombres <- productos_global %>%
+  # Filtran aquellas que tengan peso y que sean verduras o frutas.
   filter(!is.na(Peso), Tipo_peso == "Verdura y Frutas") %>%
+  # Contamos las veces que se repiten.
   count(Descripcion, sort = TRUE) %>%
+  # Tomamos únicamente las cinco primeras filas.
   slice_head(n = 5) %>%
+  # Extraemos la columna como un vector de caracteres.
   pull(Descripcion)
 
 productos_fv_masvendidos_nombres
 
-productos_fv_masvendidos <- productos_global %>%
+# Calculamos la suma del peso de los productos que más se repiten.
+productos_fv_masvendidos <- 
+  productos_global %>%
+  # Filtramos para conservar aquellas que su peso era diferente de NA.
   filter(!is.na(Peso)) %>%
+  # Nos aseguramos que este dentro de los 5 más repetidos.
   filter(Descripcion %in% productos_fv_masvendidos_nombres) %>%
+  # Agrupamos por descripción.
   group_by(Descripcion) %>%
+  # Hacemos la suma del peso total.
   summarise(Peso_total_kg = sum(Peso, na.rm = TRUE)) %>%
+  # Ordenamos de forma descendente.
   arrange(desc(Peso_total_kg))
 
 productos_fv_masvendidos
@@ -431,25 +446,34 @@ productos_fv_masvendidos
 productos_global <- productos_global %>%
   mutate(Peso = str_replace_all(Peso, ",", ".") %>% as.numeric())
 
-# 1) Los 5 pescados más vendidos (por conteo), excluyendo otras categorías
-productos_p_masvendidos_nombres <- productos_global %>%
+# Los 5 pescados más vendidos, excluyendo otras categorías.
+productos_p_masvendidos_nombres <-
+  productos_global %>%
+  # Filtramos para que tenga peso y que sea pescado.
   filter(
     !is.na(Peso),
-    Tipo_peso == "Pescado"
-  ) %>%
+    Tipo_peso == "Pescado") %>%
+  # Contamos las veces que se repiten.
   count(Descripcion, sort = TRUE) %>%
+  # Tomamos únicamente las cinco primeras filas.
   slice_head(n = 5) %>%
+  # Extraemos la columna como un vector de caracteres.
   pull(Descripcion)
 
-# 2) Sumo su peso total, asegurándome de volver a filtrar pescado
+productos_p_masvendidos_nombres
+
+# Sumamos su peso total, asegurándonos de volver a filtrar pescado.
 productos_p_masvendidos <- productos_global %>%
+  # Filtramos para conservar aquellas que su peso era diferente de NA y que su tipo sea pescado. Además de que este dentro de los nombre definidos.
   filter(
     !is.na(Peso),
     Tipo_peso == "Pescado",
-    Descripcion %in% productos_p_masvendidos_nombres
-  ) %>%
+    Descripcion %in% productos_p_masvendidos_nombres) %>%
+  # Agrupamos por descripción.
   group_by(Descripcion) %>%
+  # Hacemos la suma del peso total.
   summarise(Peso_total_kg = sum(Peso, na.rm = TRUE), .groups = "drop") %>%
+  # Ordenamos de forma descendiente.
   arrange(desc(Peso_total_kg))
 
 productos_p_masvendidos
@@ -508,7 +532,9 @@ ggplot(serie_temporal, aes(x = fecha, y = precio_medio_kg, color = Descripcion))
 ```{r}
 
 tickets_global %>% 
+  # Contamos las veces que se repiten las localidades ordenándolas de mayor a menor.
   count(localidad, sort = TRUE) %>%
+  # Mostramos las 10 primeras.
   head(10)
 
 ```
@@ -519,18 +545,25 @@ Como podemos observar Valencia es la ciudad con más tickets.
   
 ```{r}
 
-# Contamos los tickets por día de la semana.
-tickets_semana <- tickets_global %>%
-  mutate( dia_semana = wday(fecha, label = TRUE, abbr = FALSE, week_start = 1)) %>%
-  count(dia_semana, name = "tickets") 
+# No aseguramos de que la fecha es Date.
+tickets_global_2 <- tickets_global %>%
+  mutate(fecha = dmy(fecha))
 
-# Creamos el diagrama de barras.
-ggplot(tickets_semana, aes(x = dia_semana, y = tickets)) +
-  geom_col() +
-  labs(
-    title = "Tickets recogidos según día de la semana",
-    x = "Día de la semana",
-    y = "Número de tickets")
+# Hacemos la tabla de recuentos.
+recuento_dias <- table( weekdays(tickets_global_2$fecha, abbreviate = FALSE) )
+
+# Reordenamos para mostrar de lunes a domingo.
+niveles <- c("lunes","martes","miércoles","jueves","viernes","sábado","domingo")
+recuento_dias <- recuento_dias[ tolower(names(recuento_dias)) %in% niveles ]
+recuento_dias <- recuento_dias[niveles]
+
+# Hacemos un barplot.
+barplot(
+  recuento_dias,
+  las = 2,              # etiquetas verticales
+  main = "Tickets por día de la semana",
+  ylab = "Número de tickets"
+)
 
 ```
 
@@ -778,16 +811,21 @@ cafes <- productos_global %>%
 cafes
 ```
 
-  -   ¿Hay diferencia de precios entre el mismo producto comprado en diferentes fechas?
+  -   ¿El precio de un mismo producto cambia dependiendo del día en que se compra?
 
 ```{r}
+productos_global2 <- productos_global %>%
+  left_join(tickets_global %>% select(factura_simplificada, fecha), 
+            by = "factura_simplificada")
 
-promedio_productos <- productos_global %>%
-  group_by(factura_simplificada) %>%
-  summarise(n_productos = n()) %>%
-  summarise(media = mean(n_productos))
+# Buscamos productos con más de un precio distinto
+productos_con_precios_distintos <- productos_global2 %>%
+  filter(!is.na(P.Unit), !is.na(Descripcion)) %>%
+  group_by(Descripcion) %>%
+  summarise(num_precios_distintos = n_distinct(P.Unit)) %>%
+  filter(num_precios_distintos > 1)
 
-promedio_productos
+productos_con_precios_distintos
 ```
 
   -   ¿Cuántos productos por ticket se compran en promedio?
@@ -1198,4 +1236,6 @@ print(gasto_por_periodo)
 Además, gracias a la estructura de datos generada por el algoritmo en R, se podrán realizar análisis a gran escala sobre patrones de compra, como la frecuencia de compra de ciertos productos (por ejemplo, diferentes tipos de chocolate), identificar preferencias de los consumidores y realizar predicciones sobre comportamientos de compra futuros. Este enfoque también permite identificar posibles variaciones en los precios debido a factores como promociones, descuentos o cambios en la política fiscal.
 
 En resumen, el proyecto no solo busca desarrollar una herramienta técnica que facilite la lectura y el análisis de tickets en PDF, sino que tiene un enfoque orientado a la toma de decisiones basada en datos. Al poder analizar grandes volúmenes de tickets y obtener datos estructurados, se abren múltiples posibilidades para estudios de mercado, optimización de precios y una comprensión más profunda de los hábitos de consumo.
+
+
 
