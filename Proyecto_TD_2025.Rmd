@@ -370,7 +370,7 @@ productos_ud_masvendidos
 ```{r}
 
 productos_fv_masvendidos_nombres <- productos_global %>%
-  filter(!is.na(Peso) & Tipo_peso == "Verdura y Frutas") %>%
+  filter(!is.na(Peso), Tipo_peso == "Verdura y Frutas") %>%
   count(Descripcion, sort = TRUE) %>%
   slice_head(n = 5) %>%
   pull(Descripcion)
@@ -392,7 +392,7 @@ productos_fv_masvendidos
 ```{r}
 
 productos_p_masvendidos_nombres <- productos_global %>%
-  filter(!is.na(Peso) & Tipo_peso == "Pescado") %>%
+  filter(!is.na(Peso), Tipo_peso == "Pescado") %>%
   filter(!Descripcion %in% VERDUFRUTA) %>%
   count(Descripcion, sort = TRUE) %>%
   slice_head(n = 5) %>%
@@ -415,7 +415,46 @@ productos_p_masvendidos
 
 ```{r}
 
+# Filtramos solo bananas y plátanos, y calculamos el precio por kilo.
+bananas_platanos <- productos_global %>%
+  # Estandarizamos a mayúsculas para captar variantes.
+  mutate(Descripcion = str_to_upper(Descripcion)) %>%
+  filter(
+    str_detect(Descripcion, "\\b(PLÁTANO|PLATANO|BANANA)\\b") &
+    !str_detect(Descripcion, "MANZANA")
+  ) %>%
+  # Calculamos el precio por kg.
+  mutate(precio_kg = Importe / Peso) %>%
+  # Unimos con la fecha del ticket.
+  left_join(
+    tickets_global %>% 
+      select(factura_simplificada, fecha),
+    by = "factura_simplificada"
+  ) %>%
+  # Convierto fecha a Date
+  mutate(fecha = dmy(fecha)) %>%
+  filter(!is.na(fecha))
 
+# Agrupamos por fecha y producto, calculamos precio medio por día.
+serie_temporal <- bananas_platanos %>%
+  group_by(fecha, Descripcion) %>%
+  summarise(precio_medio_kg = mean(precio_kg, na.rm = TRUE), .groups = "drop") %>%
+  arrange(fecha)
+
+# Realizamos el gráfico de líneas.
+ggplot(serie_temporal, aes(x = fecha, y = precio_medio_kg, color = Descripcion)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+  labs(
+    title = "Evolución del precio por kilo de bananas y plátanos",
+    x = "Fecha",
+    y = "Precio medio (€ / kg)",
+    color = "Producto"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5)
+  )
 
 ```
 
