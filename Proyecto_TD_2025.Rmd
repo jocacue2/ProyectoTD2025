@@ -1,8 +1,11 @@
 ---
 title: "Proyecto Tickets TD"
-author: "José Ignacio Calatayud Cuenca, Marc Donato Merí, Manuel Giner Flores, Marc Navarro Montava, Eduardo Oltra Ramos e Isaac Ruiz Quitero"
+author: José Ignacio Calatayud Cuenca, Marc Donato Merí, Manuel Giner Flores, Marc
+  Navarro Montava, Eduardo Oltra Ramos e Isaac Ruiz Quitero
 date: "2025-03-27"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -712,8 +715,8 @@ head(productos_verdura_mas_caro, 1)  # Extraemos solo el producto más caro
 
 
   -   ¿Qué productos tienen mayor carga impositiva por IVA?
-library(dplyr)
-library(stringr)
+
+```{r}
 
 # Procesamos todos los tickets y unimos productos, agregando el tipo de IVA a cada producto
 productos_global <- archivos_pdf %>%
@@ -753,6 +756,11 @@ productos_por_iva <- productos_global %>%
 # Mostramos los productos con mayor carga impositiva
 productos_por_iva 
 
+```
+
+
+
+
 
   -   ¿Qué tipo de pan se compra con más frecuencia?
 # Filtramos solo productos que contengan "PAN" en su descripción (ignorando mayúsculas/minúsculas)
@@ -766,7 +774,7 @@ pan_mas_frecuente
 ```
   -   ¿Los consumidores compran más productos frescos o envasados?
 ```{r}
-ibrary(dplyr)
+library(dplyr)
 
 # Contamos los productos frescos y envasados según la descripción
 productos_comprados <- productos_global %>%
