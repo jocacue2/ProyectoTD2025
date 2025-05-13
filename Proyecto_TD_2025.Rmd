@@ -773,6 +773,22 @@ tendencia_ecologico <- productos_ecologicos %>%
 # Visualizamos la tendencia (número de productos ecológicos por mes/año)
 tendencia_ecologico
   -   ¿Qué porcentaje del total del ticket corresponde al IVA en promedio?
+library(dplyr)
+
+# Primero, calculamos el porcentaje de IVA para cada ticket.
+ticket_con_iva <- tickets_global %>%
+  left_join(productos_global, by = "archivo") %>%
+  mutate(
+    iva_total = ifelse(!is.na(tipos_iva), as.numeric(gsub(",", ".", tipos_iva)), 0),  # Convertimos tipos_iva en valores numéricos
+    porcentaje_iva = (iva_total / importe_total) * 100  # Calculamos el porcentaje del IVA
+  )
+
+# Calculamos el porcentaje promedio de IVA para todos los tickets.
+porcentaje_iva_promedio <- ticket_con_iva %>%
+  summarise(porcentaje_promedio = mean(porcentaje_iva, na.rm = TRUE))
+
+porcentaje_iva_promedio
+
 
   -   ¿Hay productos que se compran sistemáticamente juntos (patrones de compra)?
 ```{r}
